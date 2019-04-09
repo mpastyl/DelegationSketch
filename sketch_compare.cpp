@@ -118,7 +118,7 @@ int main(int argc, char** argv)
 	{
 		I1 = Random_Generate();
 		I2 = Random_Generate();
-		cm_cw2b[i] = new Xi_CW2B(I1, I2, buckets_no);
+		cm_cw2b[i] = new Xi_CW4B(I1, I2, buckets_no);
 	}
 
 
