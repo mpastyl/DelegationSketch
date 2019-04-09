@@ -34,6 +34,8 @@ class Sketch
 
     //estimating the self-join size or the second frequency moment
     virtual double Self_Join_Size() = 0;
+
+    //virtual double Query_Sketch(unsigned int key) = 0;
 };
 
 
@@ -160,6 +162,8 @@ class Count_Min_Sketch : public Sketch
     virtual void Clear_Sketch();
 
     virtual void Update_Sketch(unsigned int key, double func);
+    
+    double Query_Sketch(unsigned int key);
 
     virtual double Size_Of_Join(Sketch *s1);
 

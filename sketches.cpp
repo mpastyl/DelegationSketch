@@ -2,9 +2,8 @@
 #include "xis.h"
 
 #include <string.h>
-
-
-
+#include <limits.h>
+#include <stdio.h>
 using namespace std;
 
 
@@ -402,11 +401,32 @@ void Count_Min_Sketch::Clear_Sketch()
 
 void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
 {
+//  if ((key % rows_no) == 0){
+//	printf("\n");
+//  }
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
+//    if ((key % rows_no) == 0){
+//	printf("%d ",bucket);
+//    }
     sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
   }
+}
+
+
+double Count_Min_Sketch::Query_Sketch(unsigned int key)
+{
+  unsigned int min_count = UINT_MAX;
+  for (int i = 0; i < rows_no; i++)
+  {
+    int bucket = (int)xi_bucket[i]->element(key);
+    if (sketch_elem[i * buckets_no + bucket] < min_count)
+    {
+	min_count = sketch_elem[i * buckets_no + bucket];
+    }
+  }
+  return min_count;
 }
 
 

@@ -179,7 +179,12 @@ int main(int argc, char** argv)
 	cm_est = cm1->Size_Of_Join(cm2);
 
 
-
+	FILE * fp = fopen("count_min_results.txt","w");
+	for (i=0; i < dom_size; i++){
+		double approximate_freq = ((Count_Min_Sketch *)cm1)->Query_Sketch(i);
+		fprintf(fp,"%d %u %f\n", i, hist1[i],approximate_freq);	
+	}
+	fclose(fp);
 	//clean-up everything
 	for (i = 0; i < buckets_no * rows_no; i++)
 		delete agms_eh3[i];
