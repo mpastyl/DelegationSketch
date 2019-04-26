@@ -401,17 +401,29 @@ void Count_Min_Sketch::Clear_Sketch()
 
 void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
 {
-//  if ((key % rows_no) == 0){
-//	printf("\n");
-//  }
+#if !UPDATE_ONLY_MINIMUM
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
-//    if ((key % rows_no) == 0){
-//	printf("%d ",bucket);
-//    }
     sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
   }
+#else
+  unsigned int min_count = UINT_MAX;
+  for (int i = 0; i < rows_no; i++)
+  {
+    int bucket = (int)xi_bucket[i]->element(key);
+    if (sketch_elem[i * buckets_no + bucket] < min_count){
+	    min_count = sketch_elem[i * buckets_no + bucket];
+    }
+  }
+  for (int i = 0; i < rows_no; i++)
+  {
+    int bucket = (int)xi_bucket[i]->element(key);
+    if (sketch_elem[i * buckets_no + bucket] == min_count){
+    	sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
+    }
+  }
+#endif
 }
 
 
