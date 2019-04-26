@@ -2,6 +2,8 @@
 #include "xis.h"
 #include "sketches.h"
 #include "utils.h"
+#include "thread_data.h"
+#include "thread_utils.h"
 
 #include <sys/time.h>
 #include <time.h>
@@ -19,6 +21,26 @@ unsigned int Random_Generate()
     return x ^ ((h & 1) << 31);
 }
 
+void threadWork(threadDataStruct * localThreadData){
+    printf("Hello from thread %d\n", localThreadData->tid);
+}
+
+
+void * threadEntryPoint(void * threadArgs){
+    int tid = *((int *) threadArgs);
+    threadDataStruct * localThreadData = &(threadData[tid]);
+    setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
+
+    //TODO: set thread local data
+
+    barrier_cross(&barrier_global);
+    barrier_cross(&barrier_started);
+
+    threadWork(localThreadData);
+
+    return NULL;
+}
+
 int main(int argc, char **argv)
 {
     int dom_size, tuples_no;
@@ -28,7 +50,6 @@ int main(int argc, char **argv)
     double DIST_PARAM, DIST_SHUFF;
 
     int runs_no;
-    int num_threads;
 
     double agms_est, fagms_est, fc_est, cm_est;
 
@@ -52,7 +73,7 @@ int main(int argc, char **argv)
 
     runs_no = atoi(argv[8]);
 
-    num_threads = atoi(argv[9]);
+    numberOfThreads = atoi(argv[9]);
 
     srand((unsigned int)time((time_t *)NULL));
 
@@ -91,6 +112,9 @@ int main(int argc, char **argv)
             hist1[(*r1->tuples)[i]]++;
         }
 
+        initThreadData();
+        spawnThreads();
+        barrier_cross(&barrier_global);        
 
         startTime();
         //update the sketches for relation 1
@@ -99,6 +123,8 @@ int main(int argc, char **argv)
         {
             cm1->Update_Sketch((*r1->tuples)[i], 1.0);
         }
+
+        collectThreads();
         stopTime();
 
         printf("Total insertion time (ms): %lu\n",getTimeMs());

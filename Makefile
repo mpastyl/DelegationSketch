@@ -1,4 +1,4 @@
-CPP = g++ -O2 -Wno-deprecated 
+CPP = g++ -O2 -Wno-deprecated -pthread
 CPPDEBUG = g++ -O2 -Wno-deprecated -g
 
 
