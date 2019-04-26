@@ -1,6 +1,7 @@
 #include "relation.h"
 #include "xis.h"
 #include "sketches.h"
+#include "utils.h"
 
 #include <sys/time.h>
 #include <time.h>
@@ -53,15 +54,12 @@ int main(int argc, char **argv)
 
     //Ground truth histrogram
     unsigned int *hist1 = (unsigned int *)calloc(dom_size, sizeof(unsigned int));
-    unsigned int *hist2 = (unsigned int *)calloc(dom_size, sizeof(unsigned int));
     unsigned long long true_join_size = 0;
 
     //generate the two relations
     Relation *r1 = new Relation(dom_size, tuples_no);
-    Relation *r2 = new Relation(dom_size, tuples_no);
 
-    r1->Generate_Data(DIST_TYPE, DIST_PARAM, 1.0);
-    r2->Generate_Data(DIST_TYPE, DIST_PARAM, DIST_SHUFF);
+    r1->Generate_Data(DIST_TYPE, DIST_PARAM, 1.0); //Note last arg should be 1
 
     for (j = 0; j < runs_no; j++)
     {
@@ -81,35 +79,25 @@ int main(int argc, char **argv)
         for (i = 0; i < dom_size; i++)
         {
             hist1[i] = 0;
-            hist2[i] = 0;
         }
 
         Sketch *cm1 = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
-        Sketch *cm2 = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
-
-        //update the sketches for relation 1
         for (i = 0; i < r1->tuples_no; i++)
         {
             hist1[(*r1->tuples)[i]]++;
+        }
+
+
+        startTime();
+        //update the sketches for relation 1
+        //#pragma omp parallel for 
+        for (i = 0; i < r1->tuples_no; i++)
+        {
             cm1->Update_Sketch((*r1->tuples)[i], 1.0);
         }
+        stopTime();
 
-        //update the sketches for relation 2
-        for (i = 0; i < r2->tuples_no; i++)
-        {
-            hist2[(*r2->tuples)[i]]++;
-            cm2->Update_Sketch((*r2->tuples)[i], 1.0);
-        }
-
-        //Compute ground truth
-        true_join_size = 0;
-        for (i = 0; i < dom_size; i++)
-        {
-            true_join_size += hist1[i] * hist2[i];
-        }
-
-        //compute the sketch estimate
-        cm_est = cm1->Size_Of_Join(cm2);
+        printf("Total insertion time (ms): %lu\n",getTimeMs());
 
         FILE *fp = fopen("count_min_results.txt", "w");
         for (i = 0; i < dom_size; i++)
@@ -128,13 +116,10 @@ int main(int argc, char **argv)
         delete[] cm_cw2b;
 
         delete cm1;
-        delete cm2;
 
-        printf("%20.2llu | %20.2f \n", true_join_size, cm_est);
     }
 
     delete r1;
-    delete r2;
 
     return 0;
 }
