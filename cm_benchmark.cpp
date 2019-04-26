@@ -13,6 +13,8 @@
 
 using namespace std;
 
+int tuples_no;
+
 unsigned int Random_Generate()
 {
     unsigned int x = rand();
@@ -22,7 +24,16 @@ unsigned int Random_Generate()
 }
 
 void threadWork(threadDataStruct * localThreadData){
-    printf("Hello from thread %d\n", localThreadData->tid);
+    //printf("Hello from thread %d\n", localThreadData->tid);
+    int start =  localThreadData->startIndex;
+    int end = localThreadData->endIndex;
+    int i;
+    for (i = start; i < end; i++)
+    {
+        localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
+    }
+
+
 }
 
 
@@ -31,7 +42,9 @@ void * threadEntryPoint(void * threadArgs){
     threadDataStruct * localThreadData = &(threadData[tid]);
     setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
 
-    //TODO: set thread local data
+    int threadWorkSize = tuples_no /  numberOfThreads;
+    localThreadData->startIndex = tid * threadWorkSize;
+    localThreadData->endIndex =  localThreadData->startIndex + threadWorkSize; //Stop before you reach that index
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);
@@ -43,7 +56,7 @@ void * threadEntryPoint(void * threadArgs){
 
 int main(int argc, char **argv)
 {
-    int dom_size, tuples_no;
+    int dom_size;
     int buckets_no, rows_no;
 
     int DIST_TYPE;
@@ -112,17 +125,16 @@ int main(int argc, char **argv)
             hist1[(*r1->tuples)[i]]++;
         }
 
-        initThreadData();
+        initThreadData(cm1, r1);
         spawnThreads();
         barrier_cross(&barrier_global);        
 
         startTime();
         //update the sketches for relation 1
-        //#pragma omp parallel for 
-        for (i = 0; i < r1->tuples_no; i++)
-        {
-            cm1->Update_Sketch((*r1->tuples)[i], 1.0);
-        }
+        // for (i = 0; i < r1->tuples_no; i++)
+        // {
+        //     cm1->Update_Sketch((*r1->tuples)[i], 1.0);
+        // }
 
         collectThreads();
         stopTime();

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-void initThreadData(){
+void initThreadData(Sketch * sketch, Relation * relation){
     int i;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -23,6 +23,8 @@ void initThreadData(){
     for (i=0; i<numberOfThreads; ++i){
         threadData[i].tid = i;
         threadIds[i] = i;
+        threadData[i].theSketch = sketch;
+        threadData[i].theData = relation;
     }
 }
 

@@ -4,10 +4,14 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include "barrier.h"
+#include "relation.h"
+#include "sketches.h"
 
 typedef struct
 {
     int tid;
+    Sketch * theSketch;
+    Relation * theData;
     struct timeval start;
     struct timeval end;
     int startIndex;
