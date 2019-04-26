@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <sys/time.h>
+#include <stdlib.h>
 
 struct timeval global_timer_start,global_timer_stop;
 

@@ -1,4 +1,4 @@
-CPP = g++ -O2 -Wno-deprecated
+CPP = g++ -O2 -Wno-deprecated 
 CPPDEBUG = g++ -O2 -Wno-deprecated -g
 
 
@@ -17,7 +17,7 @@ sketch_compare.o : sketch_compare.cpp
 	$(CPP) -c sketch_compare.cpp
 
 cm_benchmark.o : cm_benchmark.cpp
-	$(CPP) -c cm_benchmark.cpp
+	$(CPP) -c cm_benchmark.cpp 
 
 cm_benchmark:  relation.o xis.o sketches.o cm_benchmark.o
 	$(CPP) -o cm_benchmark.out relation.o xis.o sketches.o cm_benchmark.o

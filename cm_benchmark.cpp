@@ -7,6 +7,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <omp.h>
 
 using namespace std;
 
@@ -27,14 +28,15 @@ int main(int argc, char **argv)
     double DIST_PARAM, DIST_SHUFF;
 
     int runs_no;
+    int num_threads;
 
     double agms_est, fagms_est, fc_est, cm_est;
 
     int i, j;
 
-    if (argc != 9)
+    if (argc != 10)
     {
-        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no\n");
+        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no num_threads\n");
         exit(1);
     }
 
@@ -49,6 +51,8 @@ int main(int argc, char **argv)
     DIST_SHUFF = atof(argv[7]);
 
     runs_no = atoi(argv[8]);
+
+    num_threads = atoi(argv[9]);
 
     srand((unsigned int)time((time_t *)NULL));
 
