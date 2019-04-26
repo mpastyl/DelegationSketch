@@ -113,6 +113,7 @@ int main(int argc, char** argv)
 	}
 
 	//generate the pseudo-random numbers for CM sketches; use CW2B
+    //NOTE: doesn't work with CW2B, need to use CW4B. Why?
 	Xi **cm_cw2b = new Xi*[rows_no];
 	for (i = 0; i < rows_no; i++)
 	{

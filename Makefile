@@ -16,7 +16,11 @@ sketch_compare:  relation.o xis.o sketches.o sketch_compare.o
 sketch_compare.o : sketch_compare.cpp
 	$(CPP) -c sketch_compare.cpp
 
+cm_benchmark.o : cm_benchmark.cpp
+	$(CPP) -c cm_benchmark.cpp
 
+cm_benchmark:  relation.o xis.o sketches.o cm_benchmark.o
+	$(CPP) -o cm_benchmark.out relation.o xis.o sketches.o cm_benchmark.o
 
 relation.o : relation.h relation.cpp data_generator.h
 	$(CPP) -c relation.cpp

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define UPDATE_ONLY_MINIMUM 1
+#define UPDATE_ONLY_MINIMUM 0
 
 /*
 Generic interface for the sketches estimating size of joins and self-join sizes
