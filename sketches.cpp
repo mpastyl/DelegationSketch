@@ -374,7 +374,7 @@ Count_Min_Sketch::Count_Min_Sketch(unsigned int buckets_no, unsigned int rows_no
 
   this->xi_bucket = xi_bucket;
 
-  this->sketch_elem = new double[buckets_no * rows_no];
+  this->sketch_elem = new int[buckets_no * rows_no];
   for (int i = 0; i < buckets_no * rows_no; i++)
     this->sketch_elem[i] = 0.0;
 }
@@ -405,7 +405,11 @@ void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
+    #if ATOMIC_INCREMENTS 
+    __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], 1);
+    #else
     sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
+    #endif
   }
 #else
   unsigned int min_count = UINT_MAX;
