@@ -10,7 +10,11 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#if LOCAL_COPIES
+void initThreadData(Sketch ** sketchArray, Relation * relation){
+#else
 void initThreadData(Sketch * sketch, Relation * relation){
+#endif
     int i;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -23,7 +27,11 @@ void initThreadData(Sketch * sketch, Relation * relation){
     for (i=0; i<numberOfThreads; ++i){
         threadData[i].tid = i;
         threadIds[i] = i;
+        #if LOCAL_COPIES
+        threadData[i].theSketch = sketchArray[i];
+        #else
         threadData[i].theSketch = sketch;
+        #endif
         threadData[i].theData = relation;
     }
 }

@@ -120,12 +120,24 @@ int main(int argc, char **argv)
         }
 
         Sketch *cm1 = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
+
+        #if LOCAL_COPIES
+        Sketch ** cmArray = (Sketch **) calloc(numberOfThreads, sizeof(Sketch *));
+        for (i=0; i<numberOfThreads; i++){
+            cmArray[i] = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
+        }
+        #endif
+
         for (i = 0; i < r1->tuples_no; i++)
         {
             hist1[(*r1->tuples)[i]]++;
         }
 
+        #if LOCAL_COPIES
+        initThreadData(cmArray,r1);
+        #else
         initThreadData(cm1, r1);
+        #endif
         spawnThreads();
         barrier_cross(&barrier_global);        
 
@@ -144,7 +156,14 @@ int main(int argc, char **argv)
         FILE *fp = fopen("count_min_results.txt", "w");
         for (i = 0; i < dom_size; i++)
         {
+            #if LOCAL_COPIES
+            double approximate_freq = 0;
+            for (int j=0; j<numberOfThreads; j++){
+                approximate_freq += ((Count_Min_Sketch *)cmArray[j])->Query_Sketch(i);
+            }
+            #else
             double approximate_freq = ((Count_Min_Sketch *)cm1)->Query_Sketch(i);
+            #endif
             fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
         }
         fclose(fp);
@@ -158,6 +177,16 @@ int main(int argc, char **argv)
         delete[] cm_cw2b;
 
         delete cm1;
+        #if LOCAL_COPIES
+        for (i=0; i<numberOfThreads; i++){
+            delete cmArray[i];
+        }
+        free(cmArray);
+        #endif
+    
+    printf("UPDATE_ONLY_MINIMUM: %d\n", UPDATE_ONLY_MINIMUM);
+    printf("ATOMIC_INCREMENTS:   %d\n", ATOMIC_INCREMENTS);
+    printf("LOCAL_COPIES:        %d\n", LOCAL_COPIES);
 
     }
 
