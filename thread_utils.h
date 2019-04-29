@@ -29,6 +29,7 @@ void initThreadData(Sketch * sketch, Relation * relation){
         threadIds[i] = i;
         #if LOCAL_COPIES
         threadData[i].theSketch = sketchArray[i];
+        threadData[i].sketchArray  = sketchArray;
         #else
         threadData[i].theSketch = sketch;
         #endif

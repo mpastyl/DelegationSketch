@@ -16,7 +16,12 @@ typedef struct
     struct timeval end;
     int startIndex;
     int endIndex;
-    int returnData;
+    double returnData;
+    int numQueries;
+    int numInserts;
+    #if LOCAL_COPIES
+    Sketch ** sketchArray;
+    #endif
 }threadDataStruct;
 
 

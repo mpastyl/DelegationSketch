@@ -28,10 +28,30 @@ void threadWork(threadDataStruct * localThreadData){
     int start =  localThreadData->startIndex;
     int end = localThreadData->endIndex;
     int i;
+    int numInserts = 0;
+    int numQueries = 0;
     for (i = start; i < end; i++)
     {
-        localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
+        int shouldQuery = (i+localThreadData->tid)% 100; //NOTE: Not random enough? 
+        if (shouldQuery < QUERRY_RATE){
+            numQueries++;
+            #if LOCAL_COPIES
+            double approximate_freq = 0;
+            for (int j=0; j<numberOfThreads; j++){
+                approximate_freq += ((Count_Min_Sketch *)localThreadData->sketchArray[j])->Query_Sketch(i);
+            }
+            #else
+            double approximate_freq = ((Count_Min_Sketch *)localThreadData->theSketch)->Query_Sketch(i);
+            #endif
+            localThreadData->returnData += approximate_freq;
+        }
+        else{
+            numInserts++;
+            localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
+        }
     }
+    localThreadData->numQueries = numQueries;
+    localThreadData->numInserts = numInserts;
 
 
 }
@@ -52,6 +72,19 @@ void * threadEntryPoint(void * threadArgs){
     threadWork(localThreadData);
 
     return NULL;
+}
+
+void postProcessing(){
+
+    int sumNumQueries, sumNumInserts = 0;
+    double sumReturnValues = 0;
+    for (int i=0; i<numberOfThreads; i++){
+        sumNumQueries += threadData[i].numQueries;
+        sumNumInserts += threadData[i].numInserts;
+        sumReturnValues += threadData[i].returnData;
+    }
+    float percentage  = (float) sumNumQueries * 100/(sumNumQueries + sumNumInserts);
+    printf("LOG: num Queries: %d, num Inserts %d, percentage %f garbage print %f\n",sumNumQueries, sumNumInserts, percentage, sumReturnValues);
 }
 
 int main(int argc, char **argv)
@@ -150,6 +183,8 @@ int main(int argc, char **argv)
 
         collectThreads();
         stopTime();
+
+        postProcessing();
 
         printf("Total insertion time (ms): %lu\n",getTimeMs());
 
