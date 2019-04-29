@@ -7,8 +7,8 @@
 using namespace std;
 
 #define UPDATE_ONLY_MINIMUM 0
-#define ATOMIC_INCREMENTS 0
-#define LOCAL_COPIES 1
+#define ATOMIC_INCREMENTS 1
+#define LOCAL_COPIES 0
 
 /*
 Generic interface for the sketches estimating size of joins and self-join sizes
@@ -153,7 +153,11 @@ class Count_Min_Sketch : public Sketch
     unsigned int buckets_no;
     unsigned int rows_no;
 
+    #if ATOMIC_INCREMENTS
+    volatile int *sketch_elem;
+    #else
     int *sketch_elem;
+    #endif
 
     Xi **xi_bucket;
 

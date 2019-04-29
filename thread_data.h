@@ -6,12 +6,16 @@
 #include "barrier.h"
 #include "relation.h"
 #include "sketches.h"
+#include "cm_benchmark.h"
 
 typedef struct
 {
     int tid;
     Sketch * theSketch;
     Relation * theData;
+    #if FIXED_DURATION
+    int elementsProcessed;
+    #endif
     struct timeval start;
     struct timeval end;
     int startIndex;
@@ -32,6 +36,7 @@ pthread_t *threads;
 pthread_attr_t attr;
 barrier_t barrier_global;
 barrier_t barrier_started;
+volatile int startBenchmark = 0;
 
 
 #endif 

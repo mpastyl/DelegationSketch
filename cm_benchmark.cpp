@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -30,7 +31,14 @@ void threadWork(threadDataStruct * localThreadData){
     int i;
     int numInserts = 0;
     int numQueries = 0;
+    #if FIXED_DURATION
+    i =  start;
+    int elementsProcessed = 0;
+    while(!startBenchmark){}
+    while (startBenchmark)
+    #else
     for (i = start; i < end; i++)
+    #endif
     {
         int shouldQuery = (i+localThreadData->tid)% 100; //NOTE: Not random enough? 
         if (shouldQuery < QUERRY_RATE){
@@ -49,6 +57,11 @@ void threadWork(threadDataStruct * localThreadData){
             numInserts++;
             localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
         }
+    #if FIXED_DURATION
+    localThreadData->elementsProcessed++;
+    i++;
+    if (i==end) i = start;
+    #endif
     }
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
@@ -180,6 +193,11 @@ int main(int argc, char **argv)
         // {
         //     cm1->Update_Sketch((*r1->tuples)[i], 1.0);
         // }
+        #if FIXED_DURATION
+        startBenchmark = 1;
+        sleep(FIXED_DURATION);
+        startBenchmark = 0;
+        #endif
 
         collectThreads();
         stopTime();
@@ -187,6 +205,13 @@ int main(int argc, char **argv)
         postProcessing();
 
         printf("Total insertion time (ms): %lu\n",getTimeMs());
+        #if FIXED_DURATION
+        int totalElementsProcessed;
+        for (i=0; i<numberOfThreads; i++){
+            totalElementsProcessed += threadData[i].elementsProcessed;
+        }
+        printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / FIXED_DURATION / 1000000);
+        #endif
 
         FILE *fp = fopen("count_min_results.txt", "w");
         for (i = 0; i < dom_size; i++)
