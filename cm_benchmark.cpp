@@ -24,6 +24,10 @@ unsigned int Random_Generate()
     return x ^ ((h & 1) << 31);
 }
 
+int shouldQuery(int index, int tid){
+    return (index + tid)% 100; //NOTE: not random enough?
+}
+
 void threadWork(threadDataStruct * localThreadData){
     //printf("Hello from thread %d\n", localThreadData->tid);
     int start =  localThreadData->startIndex;
@@ -40,8 +44,7 @@ void threadWork(threadDataStruct * localThreadData){
     for (i = start; i < end; i++)
     #endif
     {
-        int shouldQuery = (i+localThreadData->tid)% 100; //NOTE: Not random enough? 
-        if (shouldQuery < QUERRY_RATE){
+        if (shouldQuery(i,localThreadData->tid) < QUERRY_RATE){
             numQueries++;
             #if LOCAL_COPIES
             double approximate_freq = 0;
@@ -53,10 +56,8 @@ void threadWork(threadDataStruct * localThreadData){
             #endif
             localThreadData->returnData += approximate_freq;
         }
-        else{
-            numInserts++;
-            localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
-        }
+        numInserts++;
+        localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
     #if FIXED_DURATION
     localThreadData->elementsProcessed++;
     i++;

@@ -416,7 +416,7 @@ void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
     #endif
   }
 #else
-  unsigned int min_count = UINT_MAX;
+  unsigned int min_count = sketch_elem[(int)xi_bucket[0]->element(key)];
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
@@ -428,7 +428,11 @@ void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
   {
     int bucket = (int)xi_bucket[i]->element(key);
     if (sketch_elem[i * buckets_no + bucket] == min_count){
-    	sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
+        #if ATOMIC_INCREMENTS 
+        __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], 1);
+        #else
+        sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
+        #endif
     }
   }
 #endif
