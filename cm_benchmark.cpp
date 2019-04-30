@@ -248,6 +248,8 @@ int main(int argc, char **argv)
     printf("UPDATE_ONLY_MINIMUM: %d\n", UPDATE_ONLY_MINIMUM);
     printf("ATOMIC_INCREMENTS:   %d\n", ATOMIC_INCREMENTS);
     printf("LOCAL_COPIES:        %d\n", LOCAL_COPIES);
+    printf("QUERRY RATE:         %d\n", QUERRY_RATE);
+    printf("FIXED DURATION:      %d\n", FIXED_DURATION);
 
     }
 

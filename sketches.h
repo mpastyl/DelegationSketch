@@ -3,12 +3,11 @@
 
 
 #include "xis.h"
+#include "params.h"
 
 using namespace std;
 
-#define UPDATE_ONLY_MINIMUM 0
-#define ATOMIC_INCREMENTS 1
-#define LOCAL_COPIES 0
+
 
 /*
 Generic interface for the sketches estimating size of joins and self-join sizes
