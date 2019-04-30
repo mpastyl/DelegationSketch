@@ -64,6 +64,7 @@ void threadWork(threadDataStruct * localThreadData){
     if (i==end) i = start;
     #endif
     }
+    localThreadData->elementsProcessed += numQueries //NOTE: might need to change if queries replace inserts 
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
 
@@ -71,7 +72,7 @@ void threadWork(threadDataStruct * localThreadData){
 }
 
 
-void * threadEntryPoint(void * threadArgs){
+void * threadEntryPoint(void * threadArgs){  
     int tid = *((int *) threadArgs);
     threadDataStruct * localThreadData = &(threadData[tid]);
     setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
