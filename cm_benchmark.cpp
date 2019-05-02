@@ -74,7 +74,8 @@ void threadWork(threadDataStruct * localThreadData){
 void * threadEntryPoint(void * threadArgs){
     int tid = *((int *) threadArgs);
     threadDataStruct * localThreadData = &(threadData[tid]);
-    setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
+    //setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
+    setaffinity_oncpu(tid*2);
 
     int threadWorkSize = tuples_no /  numberOfThreads;
     localThreadData->startIndex = tid * threadWorkSize;
@@ -115,9 +116,9 @@ int main(int argc, char **argv)
 
     int i, j;
 
-    if (argc != 10)
+    if (argc != 11)
     {
-        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no num_threads\n");
+        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no num_threads querry_rate\n");
         exit(1);
     }
 
@@ -134,6 +135,7 @@ int main(int argc, char **argv)
     runs_no = atoi(argv[8]);
 
     numberOfThreads = atoi(argv[9]);
+    QUERRY_RATE = atoi(argv[10]);
 
     srand((unsigned int)time((time_t *)NULL));
 

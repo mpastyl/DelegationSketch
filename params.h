@@ -1,12 +1,19 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-#define UPDATE_ONLY_MINIMUM 0
-#define ATOMIC_INCREMENTS 1
-#define LOCAL_COPIES 0
+#define RUN_WITH_SCRIPT 0
 
-#define QUERRY_RATE 4 //percentage of queries vs inserts, per thread
+#if RUN_WITH_SCRIPT
+   #define UPDATE_ONLY_MINIMUM REPLACE_UPDATE_MIN
+   #define ATOMIC_INCREMENTS REPLACE_ATOMIC_INC
+   #define LOCAL_COPIES  REPLACE_LOCAL_COPIES
+   #define FIXED_DURATION REPLACE_FIXED_DURATION //sec
+#else
+    #define UPDATE_ONLY_MINIMUM 0
+    #define ATOMIC_INCREMENTS 0
+    #define LOCAL_COPIES 1
+    #define FIXED_DURATION 1 //sec
+#endif
 
-#define FIXED_DURATION 0 //sec
 
 #endif
