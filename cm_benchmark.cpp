@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 
         printf("Total insertion time (ms): %lu\n",getTimeMs());
         #if FIXED_DURATION
-        int totalElementsProcessed;
+        int totalElementsProcessed = 0;
         for (i=0; i<numberOfThreads; i++){
             totalElementsProcessed += threadData[i].elementsProcessed;
         }
