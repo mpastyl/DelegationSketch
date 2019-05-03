@@ -47,10 +47,14 @@ void threadWork(threadDataStruct * localThreadData){
         if (shouldQuery(i,localThreadData->tid) < QUERRY_RATE){
             numQueries++;
             #if LOCAL_COPIES
+            #if HYBRID
+            double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(i);
+            #else
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
                 approximate_freq += ((Count_Min_Sketch *)localThreadData->sketchArray[j])->Query_Sketch(i);
             }
+            #endif
             #else
             double approximate_freq = ((Count_Min_Sketch *)localThreadData->theSketch)->Query_Sketch(i);
             #endif
@@ -171,9 +175,15 @@ int main(int argc, char **argv)
         Sketch *cm1 = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
 
         #if LOCAL_COPIES
+        #if HYBRID
+        globalSketch = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
+        #endif
         Sketch ** cmArray = (Sketch **) calloc(numberOfThreads, sizeof(Sketch *));
         for (i=0; i<numberOfThreads; i++){
             cmArray[i] = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
+            #if HYBRID
+            ((Count_Min_Sketch *)cmArray[i])->SetGlobalSketch(globalSketch);
+            #endif
         }
         #endif
 
@@ -220,10 +230,14 @@ int main(int argc, char **argv)
         for (i = 0; i < dom_size; i++)
         {
             #if LOCAL_COPIES
+            #if HYBRID
+            double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
+            #else
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
                 approximate_freq += ((Count_Min_Sketch *)cmArray[j])->Query_Sketch(i);
             }
+            #endif
             #else
             double approximate_freq = ((Count_Min_Sketch *)cm1)->Query_Sketch(i);
             #endif
@@ -252,6 +266,7 @@ int main(int argc, char **argv)
     printf("LOCAL_COPIES:        %d\n", LOCAL_COPIES);
     printf("QUERRY RATE:         %d\n", QUERRY_RATE);
     printf("FIXED DURATION:      %d\n", FIXED_DURATION);
+    printf("HYBRID:              %d\n", HYBRID);
 
     }
 

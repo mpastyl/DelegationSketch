@@ -8,11 +8,13 @@
    #define ATOMIC_INCREMENTS REPLACE_ATOMIC_INC
    #define LOCAL_COPIES  REPLACE_LOCAL_COPIES
    #define FIXED_DURATION REPLACE_FIXED_DURATION //sec
+   #define HYBRID REPLACE_HYBRID
 #else
     #define UPDATE_ONLY_MINIMUM 0
     #define ATOMIC_INCREMENTS 0
     #define LOCAL_COPIES 1
-    #define FIXED_DURATION 1 //sec
+    #define FIXED_DURATION 0 //sec
+    #define HYBRID 5 //home many insertions can be kept localy per counter
 #endif
 
 

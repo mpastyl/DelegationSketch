@@ -5,8 +5,8 @@
 #include "xis.h"
 #include "params.h"
 
-using namespace std;
 
+using namespace std;
 
 
 /*
@@ -157,6 +157,9 @@ class Count_Min_Sketch : public Sketch
     #else
     int *sketch_elem;
     #endif
+    #if HYBRID
+    Sketch * theGlobalSketch;
+    #endif
 
     Xi **xi_bucket;
 
@@ -171,9 +174,15 @@ class Count_Min_Sketch : public Sketch
     
     double Query_Sketch(unsigned int key);
 
+    void incrementRawCounter(unsigned int counterIndex, int amount);
+
     virtual double Size_Of_Join(Sketch *s1);
 
     virtual double Self_Join_Size();
+
+    #if HYBRID
+    void SetGlobalSketch(Sketch *);
+    #endif
 };
 
 

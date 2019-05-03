@@ -26,9 +26,12 @@ typedef struct
     #if LOCAL_COPIES
     Sketch ** sketchArray;
     #endif
+    #if HYBRID
+    Sketch * theGlobalSketch;
+    #endif
 }threadDataStruct;
 
-
+Sketch * globalSketch;
 int numberOfThreads;
 threadDataStruct * threadData;
 int * threadIds;
@@ -37,6 +40,5 @@ pthread_attr_t attr;
 barrier_t barrier_global;
 barrier_t barrier_started;
 volatile int startBenchmark = 0;
-
 
 #endif 

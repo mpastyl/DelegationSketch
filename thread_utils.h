@@ -30,6 +30,9 @@ void initThreadData(Sketch * sketch, Relation * relation){
         #if LOCAL_COPIES
         threadData[i].theSketch = sketchArray[i];
         threadData[i].sketchArray  = sketchArray;
+            #if HYBRID
+            threadData[i].theGlobalSketch = globalSketch;
+            #endif
         #else
         threadData[i].theSketch = sketch;
         #endif

@@ -1,6 +1,7 @@
 #include "sketches.h"
 #include "xis.h"
 
+
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
@@ -381,6 +382,9 @@ Count_Min_Sketch::Count_Min_Sketch(unsigned int buckets_no, unsigned int rows_no
   #endif
   for (int i = 0; i < buckets_no * rows_no; i++)
     this->sketch_elem[i] = 0.0;
+  #if HYBRID
+  this->theGlobalSketch = NULL;
+  #endif
 }
 
 
@@ -395,6 +399,12 @@ Count_Min_Sketch::~Count_Min_Sketch()
   sketch_elem = NULL;
 }
 
+#if HYBRID
+void Count_Min_Sketch::SetGlobalSketch(Sketch * theGlobalSketch)
+{
+    this->theGlobalSketch = theGlobalSketch;
+}
+#endif
 
 void Count_Min_Sketch::Clear_Sketch()
 {
@@ -409,10 +419,16 @@ void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
-    #if ATOMIC_INCREMENTS 
+    #if ATOMIC_INCREMENTS
     __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], 1);
     #else
     sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
+    #if HYBRID
+    if (sketch_elem[i * buckets_no + bucket] == HYBRID){
+       sketch_elem[i * buckets_no + bucket] = 0;
+       ((Count_Min_Sketch *)theGlobalSketch)->incrementRawCounter(i * buckets_no + bucket, HYBRID);
+    }
+    #endif
     #endif
   }
 #else
@@ -438,6 +454,9 @@ void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
 #endif
 }
 
+void Count_Min_Sketch::incrementRawCounter(unsigned int counterIndex, int amount){
+   __sync_fetch_and_add(&sketch_elem[counterIndex], amount); 
+}
 
 double Count_Min_Sketch::Query_Sketch(unsigned int key)
 {
