@@ -428,6 +428,7 @@ void Count_Min_Sketch::Update_Sketch_Hybrid(unsigned int key, double func, int s
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
+    sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
     if (sketch_elem[i * buckets_no + bucket] == slack){
        sketch_elem[i * buckets_no + bucket] = 0;
        ((Count_Min_Sketch *)theGlobalSketch)->incrementRawCounter(i * buckets_no + bucket, slack);
