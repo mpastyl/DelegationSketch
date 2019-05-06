@@ -3,7 +3,6 @@
 
 
 #include "xis.h"
-#include "params.h"
 
 
 using namespace std;
@@ -153,9 +152,7 @@ class Count_Min_Sketch : public Sketch
     unsigned int rows_no;
 
     volatile int *sketch_elem;
-    #if HYBRID
     Sketch * theGlobalSketch;
-    #endif
 
     Xi **xi_bucket;
 
@@ -167,6 +164,10 @@ class Count_Min_Sketch : public Sketch
     virtual void Clear_Sketch();
 
     virtual void Update_Sketch(unsigned int key, double func);
+
+    void Update_Sketch_Atomics(unsigned int key, double func);
+    
+    void Update_Sketch_Hybrid(unsigned int key, double func, int slack);
     
     double Query_Sketch(unsigned int key);
 
@@ -176,9 +177,7 @@ class Count_Min_Sketch : public Sketch
 
     virtual double Self_Join_Size();
 
-    #if HYBRID
     void SetGlobalSketch(Sketch *);
-    #endif
 };
 
 

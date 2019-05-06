@@ -47,6 +47,19 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     return approximate_freq;
 }
 
+void insert(threadDataStruct * localThreadData, unsigned int key){
+    #if REMOTE_INSERTS
+    int owner = key % numberOfThreads; 
+    ((Count_Min_Sketch *)localThreadData->sketchArray[owner])->Update_Sketch_Atomics(key, 1.0);
+    #elif HYBRID
+    ((Count_Min_Sketch *)localThreadData->theSketch)->Update_Sketch_Hybrid(key, 1.0, HYBRID);
+    #elif LOCAL_COPIES
+    localThreadData->theSketch->Update_Sketch(key, 1.0);
+    #else
+    ((Count_Min_Sketch *)localThreadData->theSketch)->Update_Sketch_Atomics(key, 1.0);
+    #endif
+}
+
 void threadWork(threadDataStruct * localThreadData){
     //printf("Hello from thread %d\n", localThreadData->tid);
     int start =  localThreadData->startIndex;
@@ -69,22 +82,15 @@ void threadWork(threadDataStruct * localThreadData){
             localThreadData->returnData += approximate_freq;
         }
         numInserts++;
-        #if REMOTE_INSERTS
-        int owner = (*localThreadData->theData->tuples)[i] % numberOfThreads; 
-        localThreadData->sketchArray[owner]->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
-        #else
-        localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
+        insert(localThreadData, (*localThreadData->theData->tuples)[i]);
+        #if FIXED_DURATION
+        localThreadData->elementsProcessed++;
+        i++;
+        if (i==end) i = start;
         #endif
-    #if FIXED_DURATION
-    localThreadData->elementsProcessed++;
-    i++;
-    if (i==end) i = start;
-    #endif
     }
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
-
-
 }
 
 
@@ -277,12 +283,11 @@ int main(int argc, char **argv)
         free(cmArray);
         #endif
     
-    printf("UPDATE_ONLY_MINIMUM: %d\n", UPDATE_ONLY_MINIMUM);
-    printf("ATOMIC_INCREMENTS:   %d\n", ATOMIC_INCREMENTS);
     printf("LOCAL_COPIES:        %d\n", LOCAL_COPIES);
     printf("QUERRY RATE:         %d\n", QUERRY_RATE);
     printf("FIXED DURATION:      %d\n", FIXED_DURATION);
     printf("HYBRID:              %d\n", HYBRID);
+    printf("REMOTE_INSERTS:      %d\n", REMOTE_INSERTS);
 
     }
 

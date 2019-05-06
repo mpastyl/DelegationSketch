@@ -378,9 +378,7 @@ Count_Min_Sketch::Count_Min_Sketch(unsigned int buckets_no, unsigned int rows_no
   this->sketch_elem = new volatile int[buckets_no * rows_no];
   for (int i = 0; i < buckets_no * rows_no; i++)
     this->sketch_elem[i] = 0.0;
-  #if HYBRID
   this->theGlobalSketch = NULL;
-  #endif
 }
 
 
@@ -395,12 +393,10 @@ Count_Min_Sketch::~Count_Min_Sketch()
   sketch_elem = NULL;
 }
 
-#if HYBRID
 void Count_Min_Sketch::SetGlobalSketch(Sketch * theGlobalSketch)
 {
     this->theGlobalSketch = theGlobalSketch;
 }
-#endif
 
 void Count_Min_Sketch::Clear_Sketch()
 {
@@ -411,43 +407,32 @@ void Count_Min_Sketch::Clear_Sketch()
 
 void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
 {
-#if !UPDATE_ONLY_MINIMUM
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
-    #if ATOMIC_INCREMENTS
-    __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], 1);
-    #else
     sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
-    #if HYBRID
-    if (sketch_elem[i * buckets_no + bucket] == HYBRID){
+  }
+}
+
+void Count_Min_Sketch::Update_Sketch_Atomics(unsigned int key, double func)
+{
+  for (int i = 0; i < rows_no; i++)
+  {
+    int bucket = (int)xi_bucket[i]->element(key);
+    __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], 1); //FIXME: change all func to ints so I can use them in fetch_and_add
+  }
+}
+
+void Count_Min_Sketch::Update_Sketch_Hybrid(unsigned int key, double func, int slack)
+{
+  for (int i = 0; i < rows_no; i++)
+  {
+    int bucket = (int)xi_bucket[i]->element(key);
+    if (sketch_elem[i * buckets_no + bucket] == slack){
        sketch_elem[i * buckets_no + bucket] = 0;
-       ((Count_Min_Sketch *)theGlobalSketch)->incrementRawCounter(i * buckets_no + bucket, HYBRID);
-    }
-    #endif
-    #endif
-  }
-#else
-  unsigned int min_count = sketch_elem[(int)xi_bucket[0]->element(key)];
-  for (int i = 0; i < rows_no; i++)
-  {
-    int bucket = (int)xi_bucket[i]->element(key);
-    if (sketch_elem[i * buckets_no + bucket] < min_count){
-	    min_count = sketch_elem[i * buckets_no + bucket];
+       ((Count_Min_Sketch *)theGlobalSketch)->incrementRawCounter(i * buckets_no + bucket, slack);
     }
   }
-  for (int i = 0; i < rows_no; i++)
-  {
-    int bucket = (int)xi_bucket[i]->element(key);
-    if (sketch_elem[i * buckets_no + bucket] == min_count){
-        #if ATOMIC_INCREMENTS 
-        __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], 1);
-        #else
-        sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
-        #endif
-    }
-  }
-#endif
 }
 
 void Count_Min_Sketch::incrementRawCounter(unsigned int counterIndex, int amount){
