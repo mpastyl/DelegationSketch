@@ -33,6 +33,8 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     #if HYBRID
     double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+    #elif REMOTE_INSERTS
+    double approximate_freq = ((Count_Min_Sketch *)localThreadData->sketchArray[key % numberOfThreads])->Query_Sketch(key);
     #else
     double approximate_freq = 0;
     for (int j=0; j<numberOfThreads; j++){
@@ -67,7 +69,12 @@ void threadWork(threadDataStruct * localThreadData){
             localThreadData->returnData += approximate_freq;
         }
         numInserts++;
+        #if REMOTE_INSERTS
+        int owner = (*localThreadData->theData->tuples)[i] % numberOfThreads; 
+        localThreadData->sketchArray[owner]->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
+        #else
         localThreadData->theSketch->Update_Sketch((*localThreadData->theData->tuples)[i], 1.0);
+        #endif
     #if FIXED_DURATION
     localThreadData->elementsProcessed++;
     i++;
@@ -239,6 +246,8 @@ int main(int argc, char **argv)
             #if HYBRID
             double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+            #elif REMOTE_INSERTS
+            double approximate_freq = ((Count_Min_Sketch *)cmArray[i % numberOfThreads])->Query_Sketch(i);
             #else
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
