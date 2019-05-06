@@ -28,6 +28,23 @@ int shouldQuery(int index, int tid){
     return (index + tid)% 100; //NOTE: not random enough?
 }
 
+double querry(threadDataStruct * localThreadData, unsigned int key){
+    #if LOCAL_COPIES
+    #if HYBRID
+    double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
+    approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+    #else
+    double approximate_freq = 0;
+    for (int j=0; j<numberOfThreads; j++){
+        approximate_freq += ((Count_Min_Sketch *)localThreadData->sketchArray[j])->Query_Sketch(key);
+    }
+    #endif
+    #else
+    double approximate_freq = ((Count_Min_Sketch *)localThreadData->theSketch)->Query_Sketch(key);
+    #endif
+    return approximate_freq;
+}
+
 void threadWork(threadDataStruct * localThreadData){
     //printf("Hello from thread %d\n", localThreadData->tid);
     int start =  localThreadData->startIndex;
@@ -46,18 +63,7 @@ void threadWork(threadDataStruct * localThreadData){
     {
         if (shouldQuery(i,localThreadData->tid) < QUERRY_RATE){
             numQueries++;
-            #if LOCAL_COPIES
-            #if HYBRID
-            double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(i);
-            #else
-            double approximate_freq = 0;
-            for (int j=0; j<numberOfThreads; j++){
-                approximate_freq += ((Count_Min_Sketch *)localThreadData->sketchArray[j])->Query_Sketch(i);
-            }
-            #endif
-            #else
-            double approximate_freq = ((Count_Min_Sketch *)localThreadData->theSketch)->Query_Sketch(i);
-            #endif
+            double approximate_freq = querry(localThreadData, i);
             localThreadData->returnData += approximate_freq;
         }
         numInserts++;
@@ -232,6 +238,7 @@ int main(int argc, char **argv)
             #if LOCAL_COPIES
             #if HYBRID
             double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
+            approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
             #else
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){

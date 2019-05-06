@@ -152,11 +152,7 @@ class Count_Min_Sketch : public Sketch
     unsigned int buckets_no;
     unsigned int rows_no;
 
-    #if ATOMIC_INCREMENTS
     volatile int *sketch_elem;
-    #else
-    int *sketch_elem;
-    #endif
     #if HYBRID
     Sketch * theGlobalSketch;
     #endif

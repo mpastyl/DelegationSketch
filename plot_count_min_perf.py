@@ -33,6 +33,7 @@ with open(filename) as fp:
 hist, answers = deserializeFrequencies(indexes, hist, answers)
 
 print "Average Relative Error: ", computeARE(hist,answers)
+print "Absolute difference on most frequent element: ", answers[0] - hist[0]
 
 plt.plot(answers, label = "Approximation")
 plt.plot(hist,label = "True")
