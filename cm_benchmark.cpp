@@ -65,27 +65,27 @@ void threadWork(threadDataStruct * localThreadData){
     int i;
     int numInserts = 0;
     int numQueries = 0;
-    #if FIXED_DURATION
     i =  start;
     int elementsProcessed = 0;
     while(!startBenchmark){}
-    while (startBenchmark)
-    #else
-    for (i = start; i < end; i++)
-    #endif
-    {
-        if (shouldQuery(i,localThreadData->tid) < QUERRY_RATE){
-            numQueries++;
-            double approximate_freq = querry(localThreadData, i);
-            localThreadData->returnData += approximate_freq;
+    while (startBenchmark){
+        for (i = start; i < end; i++){
+            if (!startBenchmark){
+                break;
+            }
+            if (shouldQuery(i,localThreadData->tid) < QUERRY_RATE){
+                numQueries++;
+                double approximate_freq = querry(localThreadData, i);
+                localThreadData->returnData += approximate_freq;
+            }
+            numInserts++;
+            insert(localThreadData, (*localThreadData->theData->tuples)[i]);
+            localThreadData->elementsProcessed++;
         }
-        numInserts++;
-        insert(localThreadData, (*localThreadData->theData->tuples)[i]);
-        #if FIXED_DURATION
-        localThreadData->elementsProcessed++;
-        i++;
-        if (i==end) i = start;
-        #endif
+        //If duration is 0 then I only loop once over the input. This is to do accuracy tests.
+        if (DURATION == 0){
+            break;
+        }
     }
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
@@ -137,9 +137,9 @@ int main(int argc, char **argv)
 
     int i, j;
 
-    if (argc != 11)
+    if (argc != 12)
     {
-        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no num_threads querry_rate\n");
+        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no num_threads querry_rate duration(in sec, 0 means one pass over the data)\n");
         exit(1);
     }
 
@@ -157,6 +157,8 @@ int main(int argc, char **argv)
 
     numberOfThreads = atoi(argv[9]);
     QUERRY_RATE = atoi(argv[10]);
+
+    DURATION = atoi(argv[11]);
 
     srand((unsigned int)time((time_t *)NULL));
 
@@ -208,26 +210,27 @@ int main(int argc, char **argv)
 
         startTime();
 
-        #if FIXED_DURATION
         startBenchmark = 1;
-        sleep(FIXED_DURATION);
-        startBenchmark = 0;
-        #endif
-
+        if (DURATION > 0){
+            sleep(DURATION);
+            startBenchmark = 0;
+        }
         collectThreads();
         stopTime();
 
         postProcessing();
 
         printf("Total insertion time (ms): %lu\n",getTimeMs());
-        #if FIXED_DURATION
         int totalElementsProcessed = 0;
         for (i=0; i<numberOfThreads; i++){
             totalElementsProcessed += threadData[i].elementsProcessed;
         }
-        printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / FIXED_DURATION / 1000000);
-        #endif
-
+        if (DURATION > 0){
+            printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / DURATION / 1000000);
+        }
+        else{
+            printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / getTimeMs() / 1000000);
+        }
         FILE *fp = fopen("count_min_results.txt", "w");
         for (i = 0; i < dom_size; i++)
         {
@@ -261,11 +264,13 @@ int main(int argc, char **argv)
         }
         free(cmArray);
     
+    printf("SHARED_SKETCH:       %d\n", SHARED_SKETCH);
     printf("LOCAL_COPIES:        %d\n", LOCAL_COPIES);
-    printf("QUERRY RATE:         %d\n", QUERRY_RATE);
-    printf("FIXED DURATION:      %d\n", FIXED_DURATION);
     printf("HYBRID:              %d\n", HYBRID);
     printf("REMOTE_INSERTS:      %d\n", REMOTE_INSERTS);
+    printf("-----------------------\n");
+    printf("DURATION:            %d\n", DURATION);
+    printf("QUERRY RATE:         %d\n", QUERRY_RATE);
 
     }
 

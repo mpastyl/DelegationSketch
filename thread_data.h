@@ -13,9 +13,7 @@ typedef struct
     int tid;
     Sketch * theSketch;
     Relation * theData;
-    #if FIXED_DURATION
     int elementsProcessed;
-    #endif
     struct timeval start;
     struct timeval end;
     int startIndex;

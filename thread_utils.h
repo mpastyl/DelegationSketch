@@ -27,9 +27,7 @@ void initThreadData(Sketch ** sketchArray, Relation * relation){
         threadData[i].sketchArray  = sketchArray;
         threadData[i].theGlobalSketch = globalSketch;
         threadData[i].theData = relation;
-        #if FIXED_DURATION
         threadData[i].elementsProcessed = 0;
-        #endif
     }
 }
 

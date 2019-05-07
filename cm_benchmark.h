@@ -3,5 +3,6 @@
 
 #include "params.h"
 int QUERRY_RATE;
+int DURATION;
 void * threadEntryPoint(void * threadArgs);
 #endif
