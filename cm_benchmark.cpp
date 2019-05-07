@@ -41,6 +41,8 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     }
     #elif SHARED_SKETCH
     double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
+    #else 
+        #error "Preprocessor flags not properly set"
     #endif
     return approximate_freq;
 }
