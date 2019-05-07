@@ -42,7 +42,7 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     }
     #endif
     #else
-    double approximate_freq = ((Count_Min_Sketch *)localThreadData->theSketch)->Query_Sketch(key);
+    double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
     #endif
     return approximate_freq;
 }
@@ -56,7 +56,7 @@ void insert(threadDataStruct * localThreadData, unsigned int key){
     #elif LOCAL_COPIES
     localThreadData->theSketch->Update_Sketch(key, 1.0);
     #else
-    ((Count_Min_Sketch *)localThreadData->theSketch)->Update_Sketch_Atomics(key, 1.0);
+    ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Update_Sketch_Atomics(key, 1.0);
     #endif
 }
 
@@ -191,40 +191,25 @@ int main(int argc, char **argv)
             hist1[i] = 0;
         }
 
-        Sketch *cm1 = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
 
-        #if LOCAL_COPIES
-        #if HYBRID
         globalSketch = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
-        #endif
         Sketch ** cmArray = (Sketch **) calloc(numberOfThreads, sizeof(Sketch *));
         for (i=0; i<numberOfThreads; i++){
             cmArray[i] = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
-            #if HYBRID
             ((Count_Min_Sketch *)cmArray[i])->SetGlobalSketch(globalSketch);
-            #endif
         }
-        #endif
 
         for (i = 0; i < r1->tuples_no; i++)
         {
             hist1[(*r1->tuples)[i]]++;
         }
 
-        #if LOCAL_COPIES
         initThreadData(cmArray,r1);
-        #else
-        initThreadData(cm1, r1);
-        #endif
         spawnThreads();
         barrier_cross(&barrier_global);        
 
         startTime();
-        //update the sketches for relation 1
-        // for (i = 0; i < r1->tuples_no; i++)
-        // {
-        //     cm1->Update_Sketch((*r1->tuples)[i], 1.0);
-        // }
+
         #if FIXED_DURATION
         startBenchmark = 1;
         sleep(FIXED_DURATION);
@@ -261,7 +246,7 @@ int main(int argc, char **argv)
             }
             #endif
             #else
-            double approximate_freq = ((Count_Min_Sketch *)cm1)->Query_Sketch(i);
+            double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
             #endif
             fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
         }
@@ -275,7 +260,6 @@ int main(int argc, char **argv)
 
         delete[] cm_cw2b;
 
-        delete cm1;
         #if LOCAL_COPIES
         for (i=0; i<numberOfThreads; i++){
             delete cmArray[i];

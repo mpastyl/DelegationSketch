@@ -23,12 +23,8 @@ typedef struct
     double returnData;
     int numQueries;
     int numInserts;
-    #if LOCAL_COPIES
     Sketch ** sketchArray;
-    #endif
-    #if HYBRID
     Sketch * theGlobalSketch;
-    #endif
 }threadDataStruct;
 
 Sketch * globalSketch;
