@@ -1,4 +1,5 @@
 *.o
 *.out
+*.log
 .vscode/*
 count_min_results.txt

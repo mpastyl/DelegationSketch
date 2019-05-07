@@ -1,36 +1,30 @@
-
-CONFIG_LOCAL_COPIES=1
-CONFIG_FIXED_DURATION=1
-CONFIG_HYBRID=0
-CONFIG_REMOTE_INSERTS=0
-
-cp params.h backup_params.h
-
-sed -i -e "s/REPLACE_LOCAL_COPIES/$CONFIG_LOCAL_COPIES/g" params.h
-sed -i -e "s/REPLACE_FIXED_DURATION/$CONFIG_FIXED_DURATION/g" params.h
-sed -i -e "s/REPLACE_HYBRID/$CONFIG_HYBRID/g" params.h
-sed -i -e "s/REPLACE_REMOTE_INSERTS/$CONFIG_REMOTE_INSERTS/g" params.h
-
 make clean
-make cm_benchmark
+make all
 
-#rm shared_no_queries.txt
-#rm share_nothing_no_queries.txt
+versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts"
 
-for threads in `seq 1 32`
-do
-#./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 $threads 0 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> shared_no_queries.txt
-./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 $threads 0 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> share_nothing_no_queries.txt
-#./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 $threads 0 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> shared_hybrid.txt
-#./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 $threads 0 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> remote_inserts.txt
-done
+
+# for version in $versions
+# do
+#     echo $version
+#     rm -f ${version}_no_queries.log
+#     for threads in `seq 1 40`
+#     do
+#         ./$version.out 10000 60000 64 64 1 1 1 1 $threads 0 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> ${version}_no_queries.log
+#     done
+# done
 
 query_rates="0 2 4 6 8 10"
-for queries in $query_rates
+thread_list="20"
+for version in $versions
 do
-#./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 20 $queries | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> shared_20_threads.txt
-./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 20 $queries | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> share_nothing_20_threads.txt
-#./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 20 $queries | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> hybrid_20_threads.txt
-#./cm_benchmark.out 10000 60000 64 64 1 1 0.5 1 20 $queries | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> remote_inserts_20_threads.txt
+    for threads  in $thread_list
+    do
+        echo ${version} ${threads}
+        rm -f ${version}_${threads}_threads.log
+        for queries in $query_rates
+        do
+            ./$version.out 10000 60000 64 64 1 1 1 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> ${version}_${threads}_threads.log
+        done
+    done
 done
-mv backup_params.h params.h

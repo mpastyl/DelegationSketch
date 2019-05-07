@@ -1,5 +1,8 @@
 from matplotlib import pyplot as plt
 
+
+versions = ["shared", "local_copies", "hybrid", "remote_inserts"]
+
 def read_perf(filename):
     returnList = []  
     with open(filename,'r') as f:
@@ -8,55 +11,26 @@ def read_perf(filename):
             returnList.append(perf)
     return returnList
 
-fname_shared_no_q = "shared_no_queries.txt"
-fname_share_nothing_no_q = "share_nothing_no_queries.txt"
-fname_shared_hybrid = "shared_hybrid.txt"
-fname_remote_inserts = "remote_inserts.txt"
 
-shared_no_q =  read_perf(fname_shared_no_q)
-share_nothing_no_q = read_perf(fname_share_nothing_no_q)
-shared_hybrid = read_perf(fname_shared_hybrid)
-remote_inserts = read_perf(fname_remote_inserts)
+ScalingData ={}
+for version in versions:
+    ScalingData[version] = read_perf("cm_"+version+"_no_queries.log")
 
-plt.plot(shared_no_q,label='Shared sketch')
-plt.plot(share_nothing_no_q,label="Independent Sketches")
-plt.plot(shared_hybrid,label='Hybrid')
-plt.plot(remote_inserts,label='Remote Inserts')
+for version in versions:
+    plt.plot(ScalingData[version], label = version)
 plt.legend()
 plt.xlabel("Threads")
 plt.ylabel("Mops/sec")
 plt.show()
 
-
-fname_shared_20_threads = "shared_20_threads.txt"
-fname_share_nothing_20_threads = "share_nothing_20_threads.txt"
-fname_hybrid_20_threads = "hybrid_20_threads.txt"
-fname_remote_inserts_20_threads = "remote_inserts_20_threads.txt"
-
-shared_20_threads = read_perf(fname_shared_20_threads)
-share_nothing_20_threads = read_perf(fname_share_nothing_20_threads)
-hybrid_20_threads = read_perf(fname_hybrid_20_threads)
-remote_inserts_20_threads = read_perf(fname_remote_inserts_20_threads)
-
 query_rates = [0,2,4,6,8,10]
-plt.plot(query_rates, shared_20_threads,label='Shared sketch')
-plt.plot(query_rates, share_nothing_20_threads,label="Independent Sketches")
-plt.plot(query_rates, hybrid_20_threads,label='Hybrid sketch')
-plt.plot(query_rates, remote_inserts_20_threads,label='Remote Inserts')
-plt.legend()
-plt.xlabel("Query rate (%)")
-plt.ylabel("Mops/sec")
-plt.show()
+threads="20"
+QueriesData = {}
+for version in versions:
+    QueriesData[version] = read_perf("cm_"+version+"_"+threads+"_threads.log")
 
-fname_shared_10_threads = "shared_10_threads.txt"
-fname_share_nothing_10_threads = "share_nothing_10_threads.txt"
-
-shared_10_threads = read_perf(fname_shared_10_threads)
-share_nothing_10_threads = read_perf(fname_share_nothing_10_threads)
-
-query_rates = [0,2,4,6,8,10]
-plt.plot(query_rates, shared_10_threads,label='Shared sketch')
-plt.plot(query_rates, share_nothing_10_threads,label="Independent Sketches")
+for version in versions:
+    plt.plot(query_rates,QueriesData[version], label = version)
 plt.legend()
 plt.xlabel("Query rate (%)")
 plt.ylabel("Mops/sec")

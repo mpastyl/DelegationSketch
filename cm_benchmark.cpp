@@ -275,6 +275,7 @@ int main(int argc, char **argv)
     printf("-----------------------\n");
     printf("DURATION:            %d\n", DURATION);
     printf("QUERRY RATE:         %d\n", QUERRY_RATE);
+    printf("THREADS:             %d\n", numberOfThreads);
 
     }
 
