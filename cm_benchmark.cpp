@@ -29,19 +29,17 @@ int shouldQuery(int index, int tid){
 }
 
 double querry(threadDataStruct * localThreadData, unsigned int key){
-    #if LOCAL_COPIES
     #if HYBRID
     double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
     #elif REMOTE_INSERTS
     double approximate_freq = ((Count_Min_Sketch *)localThreadData->sketchArray[key % numberOfThreads])->Query_Sketch(key);
-    #else
+    #elif LOCAL_COPIES
     double approximate_freq = 0;
     for (int j=0; j<numberOfThreads; j++){
         approximate_freq += ((Count_Min_Sketch *)localThreadData->sketchArray[j])->Query_Sketch(key);
     }
-    #endif
-    #else
+    #elif SHARED_SKETCH
     double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
     #endif
     return approximate_freq;
@@ -55,7 +53,7 @@ void insert(threadDataStruct * localThreadData, unsigned int key){
     ((Count_Min_Sketch *)localThreadData->theSketch)->Update_Sketch_Hybrid(key, 1.0, HYBRID);
     #elif LOCAL_COPIES
     localThreadData->theSketch->Update_Sketch(key, 1.0);
-    #else
+    #elif SHARED_SKETCH
     ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Update_Sketch_Atomics(key, 1.0);
     #endif
 }
@@ -233,19 +231,17 @@ int main(int argc, char **argv)
         FILE *fp = fopen("count_min_results.txt", "w");
         for (i = 0; i < dom_size; i++)
         {
-            #if LOCAL_COPIES
             #if HYBRID
             double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
             #elif REMOTE_INSERTS
             double approximate_freq = ((Count_Min_Sketch *)cmArray[i % numberOfThreads])->Query_Sketch(i);
-            #else
+            #elif LOCAL_COPIES
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
                 approximate_freq += ((Count_Min_Sketch *)cmArray[j])->Query_Sketch(i);
             }
-            #endif
-            #else
+            #elif SHARED_SKETCH
             double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
             #endif
             fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
@@ -260,12 +256,10 @@ int main(int argc, char **argv)
 
         delete[] cm_cw2b;
 
-        #if LOCAL_COPIES
         for (i=0; i<numberOfThreads; i++){
             delete cmArray[i];
         }
         free(cmArray);
-        #endif
     
     printf("LOCAL_COPIES:        %d\n", LOCAL_COPIES);
     printf("QUERRY RATE:         %d\n", QUERRY_RATE);
