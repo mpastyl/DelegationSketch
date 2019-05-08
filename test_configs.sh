@@ -8,7 +8,7 @@ for version in $versions
 do
     echo $version
     rm -f ${version}_no_queries.log
-    for threads in `seq 1 40`
+    for threads in `seq 1 28`
     do
         ./$version.out 10000 60000 64 64 1 1 1 1 $threads 0 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> ${version}_no_queries.log
     done

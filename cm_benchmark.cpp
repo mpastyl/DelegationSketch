@@ -97,10 +97,10 @@ void threadWork(threadDataStruct * localThreadData){
 void * threadEntryPoint(void * threadArgs){
     int tid = *((int *) threadArgs);
     threadDataStruct * localThreadData = &(threadData[tid]);
-    //setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
+    setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
     //ITHACA: fill first NUMA node first (even numbers)
-    int thread_id = (tid%36)*2 + tid/36;
-    setaffinity_oncpu(thread_id);
+    //int thread_id = (tid%36)*2 + tid/36;
+    //setaffinity_oncpu(thread_id);
 
     int threadWorkSize = tuples_no /  numberOfThreads;
     localThreadData->startIndex = tid * threadWorkSize;
