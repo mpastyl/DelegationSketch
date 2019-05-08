@@ -1,4 +1,4 @@
-CPP = g++ -O2 -Wno-deprecated -pthread
+CPP = g++ -O2 -Wno-deprecated -pthread -std=c++11
 CPPDEBUG = g++ -O2 -Wno-deprecated -g
 DEPS = thread_data.h thread_utils.h cm_benchmark.h barrier.h data_generator.h gen_scheme.h range_sum.h relation.h RM7_range_sum.h sampling.h sketches.h utils.h xis.h
 

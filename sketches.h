@@ -145,7 +145,7 @@ Count-Min sketches proposed in the paper:
 rows_no basic estimators are computed by hashing the key values to an array with buckets_no elements. Then the minimum of the rows_no estimators is returned as the final estimator. sketch_elem is an array of rows_no * buckets_no counters. A key is hashed using the xi_bucket pseudo-random variable corresponding to the actual row, then the counter in that bucket is updated with the value corresponding to the key.
 */
 
-class Count_Min_Sketch : public Sketch
+class alignas(64) Count_Min_Sketch : public Sketch
 {
   protected:
     unsigned int buckets_no;

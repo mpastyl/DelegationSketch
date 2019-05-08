@@ -5,6 +5,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 using namespace std;
 
 
@@ -375,7 +376,10 @@ Count_Min_Sketch::Count_Min_Sketch(unsigned int buckets_no, unsigned int rows_no
 
   this->xi_bucket = xi_bucket;
 
-  this->sketch_elem = new volatile int[buckets_no * rows_no];
+  //this->sketch_elem = (volatile int *)aligned_alloc(64, 64*sizeof(int)*(buckets_no * rows_no));
+  this->sketch_elem = (volatile int *)aligned_alloc(64, 4*sizeof(int)*(buckets_no * rows_no) + 64-(sizeof(int)*(buckets_no * rows_no))%64);
+  //printf("size of counter array %lu \n",  sizeof(int)*(buckets_no * rows_no) + 64-(sizeof(int)*(buckets_no * rows_no))%64);
+  //this->sketch_elem = new volatile int[buckets_no * rows_no];
   for (int i = 0; i < buckets_no * rows_no; i++)
     this->sketch_elem[i] = 0.0;
   this->theGlobalSketch = NULL;

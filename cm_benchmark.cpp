@@ -195,9 +195,9 @@ int main(int argc, char **argv)
             hist1[i] = 0;
         }
 
-
+        printf("size of the sketch %lu\n",sizeof(Count_Min_Sketch));
         globalSketch = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
-        Sketch ** cmArray = (Sketch **) calloc(numberOfThreads, sizeof(Sketch *));
+        Sketch ** cmArray = (Sketch **) aligned_alloc(64, numberOfThreads * sizeof(Count_Min_Sketch *));
         for (i=0; i<numberOfThreads; i++){
             cmArray[i] = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
             ((Count_Min_Sketch *)cmArray[i])->SetGlobalSketch(globalSketch);
