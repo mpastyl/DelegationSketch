@@ -173,7 +173,7 @@ int main(int argc, char **argv)
     //generate the two relations
     Relation *r1 = new Relation(dom_size, tuples_no);
 
-    r1->Generate_Data(DIST_TYPE, DIST_PARAM, 1.0); //Note last arg should be 1
+    r1->Generate_Data(DIST_TYPE, DIST_PARAM, DIST_SHUFF); //Note last arg should be 1
 
     for (j = 0; j < runs_no; j++)
     {
