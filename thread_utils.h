@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-void initThreadData(Sketch ** sketchArray, Relation * relation){
+void initThreadData(Count_Min_Sketch ** sketchArray, Relation * relation){
     int i;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);

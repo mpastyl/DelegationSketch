@@ -30,17 +30,17 @@ int shouldQuery(int index, int tid){
 
 double querry(threadDataStruct * localThreadData, unsigned int key){
     #if HYBRID
-    double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
+    double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
     #elif REMOTE_INSERTS
-    double approximate_freq = ((Count_Min_Sketch *)localThreadData->sketchArray[key % numberOfThreads])->Query_Sketch(key);
+    double approximate_freq = localThreadData->sketchArray[key % numberOfThreads]->Query_Sketch(key);
     #elif LOCAL_COPIES
     double approximate_freq = 0;
     for (int j=0; j<numberOfThreads; j++){
-        approximate_freq += ((Count_Min_Sketch *)localThreadData->sketchArray[j])->Query_Sketch(key);
+        approximate_freq += localThreadData->sketchArray[j]->Query_Sketch(key);
     }
     #elif SHARED_SKETCH
-    double approximate_freq = ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Query_Sketch(key);
+    double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
     #else 
         #error "Preprocessor flags not properly set"
     #endif
@@ -50,13 +50,13 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
 void insert(threadDataStruct * localThreadData, unsigned int key){
     #if REMOTE_INSERTS
     int owner = key % numberOfThreads; 
-    ((Count_Min_Sketch *)localThreadData->sketchArray[owner])->Update_Sketch_Atomics(key, 1.0);
+    localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1.0);
     #elif HYBRID
-    ((Count_Min_Sketch *)localThreadData->theSketch)->Update_Sketch_Hybrid(key, 1.0, HYBRID);
+    localThreadData->theSketch->Update_Sketch_Hybrid(key, 1.0, HYBRID);
     #elif LOCAL_COPIES
     localThreadData->theSketch->Update_Sketch(key, 1.0);
     #elif SHARED_SKETCH
-    ((Count_Min_Sketch *)localThreadData->theGlobalSketch)->Update_Sketch_Atomics(key, 1.0);
+    localThreadData->theGlobalSketch->Update_Sketch_Atomics(key, 1.0);
     #endif
 }
 
@@ -197,10 +197,10 @@ int main(int argc, char **argv)
 
         printf("size of the sketch %lu\n",sizeof(Count_Min_Sketch));
         globalSketch = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
-        Sketch ** cmArray = (Sketch **) aligned_alloc(64, numberOfThreads * sizeof(Count_Min_Sketch *));
+        Count_Min_Sketch ** cmArray = (Count_Min_Sketch **) aligned_alloc(64, numberOfThreads * sizeof(Count_Min_Sketch *));
         for (i=0; i<numberOfThreads; i++){
             cmArray[i] = new Count_Min_Sketch(buckets_no, rows_no, cm_cw2b);
-            ((Count_Min_Sketch *)cmArray[i])->SetGlobalSketch(globalSketch);
+            cmArray[i]->SetGlobalSketch(globalSketch);
         }
 
         for (i = 0; i < r1->tuples_no; i++)
@@ -239,17 +239,17 @@ int main(int argc, char **argv)
         for (i = 0; i < dom_size; i++)
         {
             #if HYBRID
-            double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
+            double approximate_freq = globalSketch->Query_Sketch(i);
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
             #elif REMOTE_INSERTS
-            double approximate_freq = ((Count_Min_Sketch *)cmArray[i % numberOfThreads])->Query_Sketch(i);
+            double approximate_freq = cmArray[i % numberOfThreads]->Query_Sketch(i);
             #elif LOCAL_COPIES
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
-                approximate_freq += ((Count_Min_Sketch *)cmArray[j])->Query_Sketch(i);
+                approximate_freq += cmArray[j]->Query_Sketch(i);
             }
             #elif SHARED_SKETCH
-            double approximate_freq = ((Count_Min_Sketch *)globalSketch)->Query_Sketch(i);
+            double approximate_freq = globalSketch->Query_Sketch(i);
             #endif
             fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
         }

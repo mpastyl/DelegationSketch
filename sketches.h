@@ -152,7 +152,7 @@ class alignas(64) Count_Min_Sketch : public Sketch
     unsigned int rows_no;
 
     volatile int *sketch_elem;
-    Sketch * theGlobalSketch;
+    Count_Min_Sketch * theGlobalSketch;
 
     Xi **xi_bucket;
 
@@ -177,7 +177,7 @@ class alignas(64) Count_Min_Sketch : public Sketch
 
     virtual double Self_Join_Size();
 
-    void SetGlobalSketch(Sketch *);
+    void SetGlobalSketch(Count_Min_Sketch *);
 };
 
 

@@ -11,7 +11,7 @@
 typedef struct
 {
     int tid;
-    Sketch * theSketch;
+    Count_Min_Sketch * theSketch;
     Relation * theData;
     int elementsProcessed;
     struct timeval start;
@@ -21,11 +21,11 @@ typedef struct
     double returnData;
     int numQueries;
     int numInserts;
-    Sketch ** sketchArray;
-    Sketch * theGlobalSketch;
+    Count_Min_Sketch ** sketchArray;
+    Count_Min_Sketch * theGlobalSketch;
 }threadDataStruct;
 
-Sketch * globalSketch;
+Count_Min_Sketch * globalSketch;
 int numberOfThreads;
 threadDataStruct * threadData;
 int * threadIds;
