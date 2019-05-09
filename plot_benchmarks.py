@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 
 
-versions = ["shared", "local_copies", "hybrid", "remote_inserts"]
+versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_mpsc"]
 
 def read_perf(filename):
     returnList = []  

@@ -383,6 +383,8 @@ Count_Min_Sketch::Count_Min_Sketch(unsigned int buckets_no, unsigned int rows_no
   for (int i = 0; i < buckets_no * rows_no; i++)
     this->sketch_elem[i] = 0.0;
   this->theGlobalSketch = NULL;
+
+  this->queue = new moodycamel::ConcurrentQueue<int>;
 }
 
 
@@ -397,6 +399,16 @@ Count_Min_Sketch::~Count_Min_Sketch()
   sketch_elem = NULL;
 }
 
+void Count_Min_Sketch::enqueueRequest(unsigned int key){
+    this->queue->enqueue(key);
+}
+
+void Count_Min_Sketch::serveAllRequests(){
+    unsigned int item;
+    while(this->queue->try_dequeue(item)){
+        this->Update_Sketch(item, 1);
+    }
+}
 void Count_Min_Sketch::SetGlobalSketch(Count_Min_Sketch * theGlobalSketch)
 {
     this->theGlobalSketch = theGlobalSketch;

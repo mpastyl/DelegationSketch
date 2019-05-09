@@ -1,7 +1,7 @@
 make clean
 make all
 
-versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts"
+versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_mpsc"
 
 
 thread_list="20"
@@ -14,7 +14,7 @@ do
         rm -f ${version}_${threads}_accuracy.log
         for queries in $query_rates
         do
-            ./$version.out 10000 60000 64 64 1 1 0 1 $threads $queries 0 >/dev/null
+            ./$version.out 10000 60000 64 64 1 1 1 1 $threads $queries 0 >/dev/null
             cp count_min_results.txt ${version}_${threads}_accuracy.log
         done
     done

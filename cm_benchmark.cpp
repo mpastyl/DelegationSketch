@@ -32,7 +32,7 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     #if HYBRID
     double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-    #elif REMOTE_INSERTS
+    #elif REMOTE_INSERTS || USE_MPSC
     double approximate_freq = localThreadData->sketchArray[key % numberOfThreads]->Query_Sketch(key);
     #elif LOCAL_COPIES
     double approximate_freq = 0;
@@ -48,7 +48,11 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
 }
 
 void insert(threadDataStruct * localThreadData, unsigned int key){
-    #if REMOTE_INSERTS
+    #if USE_MPSC
+    int owner = key % numberOfThreads; 
+    localThreadData->sketchArray[owner]->enqueueRequest(key);
+    localThreadData->theSketch->serveAllRequests(); //Serve any requests you can find in your own queue
+    #elif REMOTE_INSERTS
     int owner = key % numberOfThreads; 
     localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1.0);
     #elif HYBRID
@@ -229,19 +233,16 @@ int main(int argc, char **argv)
         for (i=0; i<numberOfThreads; i++){
             totalElementsProcessed += threadData[i].elementsProcessed;
         }
-        if (DURATION > 0){
-            printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / DURATION / 1000000);
-        }
-        else{
-            printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / getTimeMs() / 1000000);
-        }
+        
+        printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / getTimeMs() / 1000);
+        
         FILE *fp = fopen("count_min_results.txt", "w");
         for (i = 0; i < dom_size; i++)
         {
             #if HYBRID
             double approximate_freq = globalSketch->Query_Sketch(i);
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-            #elif REMOTE_INSERTS
+            #elif REMOTE_INSERTS || USE_MPSC
             double approximate_freq = cmArray[i % numberOfThreads]->Query_Sketch(i);
             #elif LOCAL_COPIES
             double approximate_freq = 0;

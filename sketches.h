@@ -3,6 +3,7 @@
 
 
 #include "xis.h"
+#include "concurrentqueue.h"
 
 
 using namespace std;
@@ -155,6 +156,7 @@ class alignas(64) Count_Min_Sketch : public Sketch
     Count_Min_Sketch * theGlobalSketch;
 
     Xi **xi_bucket;
+    moodycamel::ConcurrentQueue<int> *queue;
 
 
   public:
@@ -178,6 +180,10 @@ class alignas(64) Count_Min_Sketch : public Sketch
     virtual double Self_Join_Size();
 
     void SetGlobalSketch(Count_Min_Sketch *);
+
+    void enqueueRequest(unsigned int key);
+
+    void serveAllRequests();
 };
 
 
