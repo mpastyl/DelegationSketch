@@ -1,6 +1,0 @@
-Total processing throughput 2.008445
-Total processing throughput 2.009054
-Total processing throughput 2.047326
-Total processing throughput 2.058753
-Total processing throughput 2.015830
-Total processing throughput 1.947157
