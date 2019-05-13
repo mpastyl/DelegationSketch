@@ -30,7 +30,7 @@ totalHist = {}
 totalAnswers = {}
 for version in versions:
     for threads in thread_list:
-        filename = "cm_"+version+"_"+str(threads)+"_accuracy.log"
+        filename = "logs/cm_"+version+"_"+str(threads)+"_accuracy.log"
         hist = []
         answers = []
         indexes = []

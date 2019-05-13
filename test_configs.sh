@@ -1,5 +1,7 @@
+cd src
 make clean
 make all
+cd ../
 
 versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts"
 
@@ -13,16 +15,16 @@ do
     for threads  in $thread_list
     do
         echo ${version} ${threads}
-        rm -f ${version}_${threads}_accuracy.log
+        rm -f logs/${version}_${threads}_accuracy.log
         for queries in $query_rates
         do
             if [ "$version" != "cm_shared" ]; then
             echo "Using $rows * " $(($buckets/$threads))
-                ./$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 1 1 $threads $queries 0 >/dev/null
+                ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 1 1 $threads $queries 0 >/dev/null
             else
-                ./$version.out 10000 60000 $buckets $rows 1 1 1 1 $threads $queries 0 >/dev/null
+                ./bin/$version.out 10000 60000 $buckets $rows 1 1 1 1 $threads $queries 0 >/dev/null
             fi
-            cp count_min_results.txt ${version}_${threads}_accuracy.log
+            cp logs/count_min_results.txt logs/${version}_${threads}_accuracy.log
         done
     done
 done
@@ -33,13 +35,13 @@ do
     echo $version
     for queries in $query_rates
     do
-        rm -f ${version}_${queries}_queries.log
+        rm -f logs/${version}_${queries}_queries.log
         for threads in `seq 1 28`
         do
             if [ "$version" != "cm_shared" ]; then
-                ./$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> ${version}_${queries}_queries.log
+                ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries.log
             else
-                ./$version.out 10000 60000 $buckets $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> ${version}_${queries}_queries.log
+                ./bin/$version.out 10000 60000 $buckets $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries.log
             fi
         done
     done
@@ -52,13 +54,13 @@ do
     for threads  in $thread_list
     do
         echo ${version} ${threads}
-        rm -f ${version}_${threads}_threads.log
+        rm -f logs/${version}_${threads}_threads.log
         for queries in $query_rates
         do
             if [ "$version" != "cm_shared" ]; then
-                ./$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> ${version}_${threads}_threads.log
+                ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${threads}_threads.log
             else
-                ./$version.out 10000 60000 $buckets $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> ${version}_${threads}_threads.log
+                ./bin/$version.out 10000 60000 $buckets $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${threads}_threads.log
             fi
         done
     done

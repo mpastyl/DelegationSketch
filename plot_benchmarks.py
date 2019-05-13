@@ -17,7 +17,7 @@ def read_perf(filename):
 ScalingData ={}
 for version in versions:
     for queries in query_rates:
-        ScalingData[(version,queries)] = read_perf("cm_"+version+"_"+str(queries)+"_queries.log")
+        ScalingData[(version,queries)] = read_perf("logs/cm_"+version+"_"+str(queries)+"_queries.log")
 
 rows = int(math.sqrt(len(query_rates)))
 columns = len(query_rates)/rows
@@ -41,7 +41,7 @@ query_rates = [0,2,4,6]
 threads="20"
 QueriesData = {}
 for version in versions:
-    QueriesData[version] = read_perf("cm_"+version+"_"+threads+"_threads.log")
+    QueriesData[version] = read_perf("logs/cm_"+version+"_"+threads+"_threads.log")
 
 for version in versions:
     plt.plot(query_rates,QueriesData[version], label = version)
