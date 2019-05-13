@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 
 versions = ["shared", "local_copies", "hybrid", "remote_inserts"]
 #filename = "count_min_results.txt"
-threads="20"
+thread_list=range(1,29)
 
 def computeARE(groundTruth, estimates):
     sum = 0
@@ -29,37 +29,50 @@ def deserializeFrequencies(indexes,hist,answers):
 totalHist = {}
 totalAnswers = {}
 for version in versions:
-    filename = "cm_"+version+"_"+threads+"_accuracy.log"
-    hist = []
-    answers = []
-    indexes = []
+    for threads in thread_list:
+        filename = "cm_"+version+"_"+str(threads)+"_accuracy.log"
+        hist = []
+        answers = []
+        indexes = []
 
-    with open(filename) as fp:
-        for line in fp:
-            index = int(line.split()[0])
-            trueValue = int(line.split()[1])
-            approximation =  float(line.split()[2])
+        with open(filename) as fp:
+            for line in fp:
+                index = int(line.split()[0])
+                trueValue = int(line.split()[1])
+                approximation =  float(line.split()[2])
 
-            indexes.append(index)
-            hist.append(trueValue)
-            answers.append(approximation)
+                indexes.append(index)
+                hist.append(trueValue)
+                answers.append(approximation)
 
-    hist, answers = deserializeFrequencies(indexes, hist, answers)
+        hist, answers = deserializeFrequencies(indexes, hist, answers)
 
-    print "Version ", version, " Average Relative Error: ", computeARE(hist,answers)
-    print "Version ", version, " Observed Error: ", computeObservedError(hist, answers)
-    #print "Absolute difference on most frequent element: ", answers[0] - hist[0]
+        #print "Version ", version, " Average Relative Error: ", computeARE(hist,answers)
+        #print "Version ", version, " Observed Error: ", computeObservedError(hist, answers)
 
-    # plt.plot(answers, label = "Approximation")
-    # plt.plot(hist,label = "True")
-    # plt.legend()
-    # plt.show()
-    
-    totalHist[version] = hist
-    totalAnswers[version] = answers
+        totalHist[(version,threads)] = hist
+        totalAnswers[(version,threads)] = answers
 
-plt.plot(totalHist[versions[0]], label = "True")
+plt.plot(totalHist[(versions[0],thread_list[0])], label = "True")
 for version in versions:
-    plt.plot(totalAnswers[version], label = version)
+    plt.plot(totalAnswers[(version,20)], label = version)
 plt.legend()
+plt.show()
+
+realValues = totalHist[(versions[0],thread_list[0])]
+for version in versions:
+    ARE = [computeARE(realValues, totalAnswers[(version,threads)]) for threads in thread_list]
+    plt.plot(ARE, label = version)
+plt.xlabel("Threads")
+plt.ylabel("Average Relative Error")
+plt.legend(loc=2)
+plt.show()
+
+realValues = totalHist[(versions[0],thread_list[0])]
+for version in versions:
+    ObservedError = [computeObservedError(realValues, totalAnswers[(version,threads)]) for threads in thread_list]
+    plt.plot(ObservedError, label = version)
+plt.xlabel("Threads")
+plt.ylabel("Observed Error")
+plt.legend(loc=2)
 plt.show()

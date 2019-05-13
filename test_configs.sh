@@ -6,7 +6,7 @@ versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts"
 buckets=512
 rows=32
 
-thread_list="20"
+thread_list=`seq 1 28`
 query_rates="0"
 for version in $versions
 do
