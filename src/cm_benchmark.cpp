@@ -236,7 +236,7 @@ int main(int argc, char **argv)
         
         printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / getTimeMs() / 1000);
         
-        FILE *fp = fopen("count_min_results.txt", "w");
+        FILE *fp = fopen("logs/count_min_results.txt", "w");
         for (i = 0; i < dom_size; i++)
         {
             #if HYBRID
