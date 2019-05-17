@@ -19,6 +19,10 @@ typedef struct
     int startIndex;
     int endIndex;
     double returnData;
+    int filter_id[16];
+    unsigned int filter_count[16];
+    int filterCount;
+    int filterFull;
     int numQueries;
     int numInserts;
     Count_Min_Sketch ** sketchArray;

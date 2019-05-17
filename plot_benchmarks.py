@@ -3,7 +3,7 @@ import math
 
 threads = range(1,29)
 query_rates = [0,2,4,6]
-versions = ["shared", "local_copies", "hybrid", "remote_inserts"] 
+versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered"] 
 
 def read_perf(filename):
     returnList = []  
@@ -32,9 +32,13 @@ for queries in query_rates:
     for version in versions:
         serial_ax[plot_count].plot(threads,ScalingData[(version,queries)], label = version+" - "+str(queries)+"%")
         serial_ax[plot_count].legend(loc=2)
+        serial_ax[plot_count].set_xlabel("Threads")
+        serial_ax[plot_count].set_ylabel("Mops/sec")
+        serial_ax[plot_count].set_ylim(0,70)
+    
     plot_count +=1
-plt.xlabel("Threads")
-plt.ylabel("Mops/sec")
+#plt.xlabel("Threads")
+#plt.ylabel("Mops/sec")
 plt.show()
 
 query_rates = [0,2,4,6]

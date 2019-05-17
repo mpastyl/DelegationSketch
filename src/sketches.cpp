@@ -430,12 +430,12 @@ void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
   }
 }
 
-void Count_Min_Sketch::Update_Sketch_Atomics(unsigned int key, double func)
+void Count_Min_Sketch::Update_Sketch_Atomics(unsigned int key, unsigned int func)
 {
   for (int i = 0; i < rows_no; i++)
   {
     int bucket = (int)xi_bucket[i]->element(key);
-    __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], 1); //FIXME: change all func to ints so I can use them in fetch_and_add
+    __sync_fetch_and_add(&sketch_elem[i * buckets_no + bucket], func); //FIXME: change all func to ints so I can use them in fetch_and_add
   }
 }
 

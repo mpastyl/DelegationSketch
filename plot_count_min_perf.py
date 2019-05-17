@@ -1,8 +1,9 @@
 from matplotlib import pyplot as plt
 
-versions = ["shared", "local_copies", "hybrid", "remote_inserts"]
+versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered"]
 #filename = "count_min_results.txt"
-thread_list=range(1,29)
+#thread_list=range(1,29)
+thread_list=[20]
 
 def computeARE(groundTruth, estimates):
     sum = 0

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <unistd.h>
+#include <x86intrin.h>
 
 using namespace std;
 
@@ -24,6 +25,29 @@ unsigned int Random_Generate()
     return x ^ ((h & 1) << 31);
 }
 
+
+int queryFilter(unsigned int key, int * filter_id){
+    const __m128i s_item = _mm_set1_epi32(key);
+    __m128i *filter = (__m128i *)filter_id;
+    
+    __m128i f_comp = _mm_cmpeq_epi32(s_item, filter[0]);
+    __m128i s_comp = _mm_cmpeq_epi32(s_item, filter[1]);
+    __m128i t_comp = _mm_cmpeq_epi32(s_item, filter[2]);
+    __m128i r_comp = _mm_cmpeq_epi32(s_item, filter[3]);
+
+    f_comp = _mm_packs_epi32(f_comp, s_comp);
+    t_comp = _mm_packs_epi32(t_comp, r_comp);
+    f_comp = _mm_packs_epi32(f_comp, t_comp);
+
+    int found  = _mm_movemask_epi8(f_comp);
+    if (found){
+        return __builtin_ctz(found);
+    }
+    else{
+        return -1;
+    }
+
+}
 int shouldQuery(int index, int tid){
     return (index + tid)% 100; //NOTE: not random enough?
 }
@@ -53,8 +77,49 @@ void insert(threadDataStruct * localThreadData, unsigned int key){
     localThreadData->sketchArray[owner]->enqueueRequest(key);
     localThreadData->theSketch->serveAllRequests(); //Serve any requests you can find in your own queue
     #elif REMOTE_INSERTS
+    #if USE_FILTER //TODO: clean me  up
+    int qRes = queryFilter(key,localThreadData->filter_id);
+    if (qRes == -1){
+        // not in the filter but filter has space
+        if (localThreadData->filterFull < 16){
+            localThreadData->filter_id[localThreadData->filterFull] = key;
+            localThreadData->filter_count[localThreadData->filterFull] = 1;
+            localThreadData->filterFull++;
+            //localThreadData->filterCount++;
+        }
+        // not in the filter and filter is full, just do the insert in the normal way?
+        else{
+            int owner = key % numberOfThreads; 
+            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1);
+        }
+    }
+    else{ 
+        localThreadData->filter_count[qRes]++;
+        //localThreadData->filterCount++;
+        if (localThreadData->filter_count[qRes]>5){
+            unsigned int new_key = (unsigned int )(localThreadData->filter_id[qRes]);
+            int owner = new_key % numberOfThreads; 
+            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(new_key,localThreadData->filter_count[qRes]);
+            localThreadData->filter_count[qRes] = 0;
+        }
+    }
+    // if (localThreadData->filterCount == 20){
+    //     for (int j=0; j<16; j++){
+    //         if (localThreadData->filter_count[j]){
+    //             unsigned int new_key = localThreadData->filter_id[j];
+    //             int owner = new_key % numberOfThreads; 
+    //             localThreadData->sketchArray[owner]->Update_Sketch_Atomics(new_key,localThreadData->filter_count[j]);
+    //             localThreadData->filter_count[j] = 0;
+    //             localThreadData->filter_id[j] = -1;//FIXME
+    //         }
+    //     }
+    //     localThreadData->filterCount = 0;
+    //     localThreadData->filterFull = 0;
+    // }
+    #else
     int owner = key % numberOfThreads; 
     localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1.0);
+    #endif
     #elif HYBRID
     localThreadData->theSketch->Update_Sketch_Hybrid(key, 1.0, HYBRID);
     #elif LOCAL_COPIES
@@ -95,6 +160,13 @@ void threadWork(threadDataStruct * localThreadData){
     }
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
+    if(localThreadData->tid==0){
+        printf("Thread %d Filter: ",localThreadData->tid);
+        for(i=0; i<16;i++){
+            printf(" key: %d value: %u,", localThreadData->filter_id[i],localThreadData->filter_count[i]);
+        }
+    }
+    printf("\n");
 }
 
 
@@ -109,6 +181,13 @@ void * threadEntryPoint(void * threadArgs){
     int threadWorkSize = tuples_no /  numberOfThreads;
     localThreadData->startIndex = tid * threadWorkSize;
     localThreadData->endIndex =  localThreadData->startIndex + threadWorkSize; //Stop before you reach that index
+
+    for (int i=0; i<16; i++){
+        localThreadData->filter_id[i] = -1;
+        localThreadData->filter_count[i] = 0;
+    }
+    localThreadData->filterCount = 0;
+    localThreadData->filterFull = 0;
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);
