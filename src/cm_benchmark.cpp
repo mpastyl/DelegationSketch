@@ -37,6 +37,9 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
     #elif REMOTE_INSERTS || USE_MPSC
     double approximate_freq = localThreadData->sketchArray[key % numberOfThreads]->Query_Sketch(key);
+        #if USE_FILTER
+        approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+        #endif
     #elif LOCAL_COPIES
     double approximate_freq = 0;
     for (int j=0; j<numberOfThreads; j++){
@@ -115,7 +118,7 @@ void threadWork(threadDataStruct *localThreadData)
     //         printf(" key: %d value: %u\n", localThreadData->filter_id[i],localThreadData->filter_count[i]);
     //     }
     // }
-    printf("\n");
+    //printf("\n");
 }
 
 
@@ -272,6 +275,9 @@ int main(int argc, char **argv)
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
             #elif REMOTE_INSERTS || USE_MPSC
             double approximate_freq = cmArray[i % numberOfThreads]->Query_Sketch(i);
+            #if USE_FILTER
+                approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+            #endif
             #elif LOCAL_COPIES
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
