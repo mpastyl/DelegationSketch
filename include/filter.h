@@ -6,6 +6,21 @@
 
 #define MAX_FILTER_SLACK 5
 
+int findMinIndex(FilterStruct* filter){
+    int min = filter->filter_count[0];
+    int index = 0;
+    int i=1;
+    for (i=1; i<16; i++){
+        if (filter->filter_count[i] < min){
+            index = i;
+            min = filter->filter_count[i];
+        }
+    }
+    return index;
+}
+
+//Checks if key is in the filter.
+//Return: the index if key is in the filter, otherwise -1
 int queryFilter(unsigned int key, int * filterIndexes){
     const __m128i s_item = _mm_set1_epi32(key);
     __m128i *filter = (__m128i *)filterIndexes;
@@ -41,19 +56,25 @@ void updateWithFilter(threadDataStruct * localThreadData, unsigned int key){
             //localThreadData->filterCount++;
         }
         // not in the filter and filter is full, just do the insert in the normal way?
+        // OR evict the old minimum and place the new element there
         else{
-            int owner = key % numberOfThreads; 
-            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1);
+            int minIndex = findMinIndex(filter);
+            //evict the old minimum
+            int owner = filter->filter_id[minIndex] % numberOfThreads; 
+            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(filter->filter_id[minIndex], filter->filter_count[minIndex]);
+            //place the new element there
+            filter->filter_id[minIndex] = key;
+            filter->filter_count[minIndex] = 1;
         }
     }
     else{ 
         filter->filter_count[qRes]++;
         filter->filterCount++;
-        if (filter->filter_count[qRes] % MAX_FILTER_SLACK){
+        if (!(filter->filter_count[qRes] % MAX_FILTER_SLACK)){
             unsigned int new_key = (unsigned int )(filter->filter_id[qRes]);
             int owner = new_key % numberOfThreads; 
             localThreadData->sketchArray[owner]->Update_Sketch_Atomics(new_key, MAX_FILTER_SLACK);
-            filter->filter_count[qRes] = 0;
+            //filter->filter_count[qRes] = 0;
         }
     }
     // if (localThreadData->filterCount == 20){

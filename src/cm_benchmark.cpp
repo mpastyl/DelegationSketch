@@ -238,7 +238,7 @@ int main(int argc, char **argv)
             cmArray[i]->SetGlobalSketch(globalSketch);
         }
 
-        for (i = 0; i < r1->tuples_no; i++)
+        for (i = 0; i < tuples_no; i++)
         {
             hist1[(*r1->tuples)[i]]++;
         }
