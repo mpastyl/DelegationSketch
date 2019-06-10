@@ -8,6 +8,13 @@
 #include "sketches.h"
 #include "cm_benchmark.h"
 
+typedef struct{
+    int filter_id[16];
+    unsigned int filter_count[16];
+    int filterCount;
+    int filterFull;
+}FilterStruct;
+
 typedef struct
 {
     int tid;
@@ -19,10 +26,7 @@ typedef struct
     int startIndex;
     int endIndex;
     double returnData;
-    int filter_id[16];
-    unsigned int filter_count[16];
-    int filterCount;
-    int filterFull;
+    FilterStruct Filter;
     int numQueries;
     int numInserts;
     Count_Min_Sketch ** sketchArray;

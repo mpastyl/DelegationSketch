@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "thread_data.h"
 #include "thread_utils.h"
+#include "filter.h"
 
 #include <sys/time.h>
 #include <time.h>
@@ -26,28 +27,6 @@ unsigned int Random_Generate()
 }
 
 
-int queryFilter(unsigned int key, int * filter_id){
-    const __m128i s_item = _mm_set1_epi32(key);
-    __m128i *filter = (__m128i *)filter_id;
-    
-    __m128i f_comp = _mm_cmpeq_epi32(s_item, filter[0]);
-    __m128i s_comp = _mm_cmpeq_epi32(s_item, filter[1]);
-    __m128i t_comp = _mm_cmpeq_epi32(s_item, filter[2]);
-    __m128i r_comp = _mm_cmpeq_epi32(s_item, filter[3]);
-
-    f_comp = _mm_packs_epi32(f_comp, s_comp);
-    t_comp = _mm_packs_epi32(t_comp, r_comp);
-    f_comp = _mm_packs_epi32(f_comp, t_comp);
-
-    int found  = _mm_movemask_epi8(f_comp);
-    if (found){
-        return __builtin_ctz(found);
-    }
-    else{
-        return -1;
-    }
-
-}
 int shouldQuery(int index, int tid){
     return (index + tid)% 100; //NOTE: not random enough?
 }
@@ -72,79 +51,49 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
 }
 
 void insert(threadDataStruct * localThreadData, unsigned int key){
-    #if USE_MPSC
+#if USE_MPSC
     int owner = key % numberOfThreads; 
     localThreadData->sketchArray[owner]->enqueueRequest(key);
     localThreadData->theSketch->serveAllRequests(); //Serve any requests you can find in your own queue
-    #elif REMOTE_INSERTS
-    #if USE_FILTER //TODO: clean me  up
-    int qRes = queryFilter(key,localThreadData->filter_id);
-    if (qRes == -1){
-        // not in the filter but filter has space
-        if (localThreadData->filterFull < 16){
-            localThreadData->filter_id[localThreadData->filterFull] = key;
-            localThreadData->filter_count[localThreadData->filterFull] = 1;
-            localThreadData->filterFull++;
-            //localThreadData->filterCount++;
-        }
-        // not in the filter and filter is full, just do the insert in the normal way?
-        else{
-            int owner = key % numberOfThreads; 
-            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1);
-        }
-    }
-    else{ 
-        localThreadData->filter_count[qRes]++;
-        //localThreadData->filterCount++;
-        if (localThreadData->filter_count[qRes]>5){
-            unsigned int new_key = (unsigned int )(localThreadData->filter_id[qRes]);
-            int owner = new_key % numberOfThreads; 
-            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(new_key,localThreadData->filter_count[qRes]);
-            localThreadData->filter_count[qRes] = 0;
-        }
-    }
-    // if (localThreadData->filterCount == 20){
-    //     for (int j=0; j<16; j++){
-    //         if (localThreadData->filter_count[j]){
-    //             unsigned int new_key = localThreadData->filter_id[j];
-    //             int owner = new_key % numberOfThreads; 
-    //             localThreadData->sketchArray[owner]->Update_Sketch_Atomics(new_key,localThreadData->filter_count[j]);
-    //             localThreadData->filter_count[j] = 0;
-    //             localThreadData->filter_id[j] = -1;//FIXME
-    //         }
-    //     }
-    //     localThreadData->filterCount = 0;
-    //     localThreadData->filterFull = 0;
-    // }
+#elif REMOTE_INSERTS
+    #if USE_FILTER
+    updateWithFilter(localThreadData, key);
     #else
-    int owner = key % numberOfThreads; 
+    int owner = key % numberOfThreads;
     localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1.0);
     #endif
-    #elif HYBRID
+#elif HYBRID
     localThreadData->theSketch->Update_Sketch_Hybrid(key, 1.0, HYBRID);
-    #elif LOCAL_COPIES
+#elif LOCAL_COPIES
     localThreadData->theSketch->Update_Sketch(key, 1.0);
-    #elif SHARED_SKETCH
+#elif SHARED_SKETCH
     localThreadData->theGlobalSketch->Update_Sketch_Atomics(key, 1.0);
-    #endif
+#endif
 }
 
-void threadWork(threadDataStruct * localThreadData){
+void threadWork(threadDataStruct *localThreadData)
+{
     //printf("Hello from thread %d\n", localThreadData->tid);
-    int start =  localThreadData->startIndex;
+    int start = localThreadData->startIndex;
     int end = localThreadData->endIndex;
     int i;
     int numInserts = 0;
     int numQueries = 0;
-    i =  start;
+    i = start;
     int elementsProcessed = 0;
-    while(!startBenchmark){}
-    while (startBenchmark){
-        for (i = start; i < end; i++){
-            if (!startBenchmark){
+    while (!startBenchmark)
+    {
+    }
+    while (startBenchmark)
+    {
+        for (i = start; i < end; i++)
+        {
+            if (!startBenchmark)
+            {
                 break;
             }
-            if (shouldQuery(i,localThreadData->tid) < QUERRY_RATE){
+            if (shouldQuery(i, localThreadData->tid) < QUERRY_RATE)
+            {
                 numQueries++;
                 double approximate_freq = querry(localThreadData, i);
                 localThreadData->returnData += approximate_freq;
@@ -160,12 +109,12 @@ void threadWork(threadDataStruct * localThreadData){
     }
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
-    if(localThreadData->tid==0){
-        printf("Thread %d Filter: ",localThreadData->tid);
-        for(i=0; i<16;i++){
-            printf(" key: %d value: %u,", localThreadData->filter_id[i],localThreadData->filter_count[i]);
-        }
-    }
+    // if(localThreadData->tid==1){
+    //     printf("Thread %d Filter: \n",localThreadData->tid);
+    //     for(i=0; i<16;i++){
+    //         printf(" key: %d value: %u\n", localThreadData->filter_id[i],localThreadData->filter_count[i]);
+    //     }
+    // }
     printf("\n");
 }
 
@@ -183,11 +132,11 @@ void * threadEntryPoint(void * threadArgs){
     localThreadData->endIndex =  localThreadData->startIndex + threadWorkSize; //Stop before you reach that index
 
     for (int i=0; i<16; i++){
-        localThreadData->filter_id[i] = -1;
-        localThreadData->filter_count[i] = 0;
+        localThreadData->Filter.filter_id[i] = -1;
+        localThreadData->Filter.filter_count[i] = 0;
     }
-    localThreadData->filterCount = 0;
-    localThreadData->filterFull = 0;
+    localThreadData->Filter.filterCount = 0;
+    localThreadData->Filter.filterFull = 0;
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);
