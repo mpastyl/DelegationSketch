@@ -39,22 +39,22 @@ sampling.o : sampling.cpp
 	$(CPP) -c sampling.cpp
 
 cm_shared.o: cm_benchmark.cpp 
-	$(CPP) -c cm_benchmark.cpp -D SHARED_SKETCH=1 -D LOCAL_COPIES=0 -D HYBRID=0 -D REMOTE_INSERTS=0 -D USE_MPSC=0 -D USE_FILTER=0
+	$(CPP) -c cm_benchmark.cpp -D SHARED_SKETCH=1 
 
 cm_local_copies.o: cm_benchmark.cpp
-	$(CPP) -c cm_benchmark.cpp -D SHARED_SKETCH=0 -D LOCAL_COPIES=1 -D HYBRID=0 -D REMOTE_INSERTS=0 -D USE_MPSC=0 -D USE_FILTER=0
+	$(CPP) -c cm_benchmark.cpp -D LOCAL_COPIES=1 
 
 cm_hybrid.o: cm_benchmark.cpp
-	$(CPP) -c cm_benchmark.cpp -D SHARED_SKETCH=0 -D LOCAL_COPIES=0 -D HYBRID=5 -D REMOTE_INSERTS=0 -D USE_MPSC=0 -D USE_FILTER=0
+	$(CPP) -c cm_benchmark.cpp -D HYBRID=5 
 
 cm_remote_inserts.o: cm_benchmark.cpp
-	$(CPP) -c cm_benchmark.cpp -D SHARED_SKETCH=0 -D LOCAL_COPIES=0 -D HYBRID=0 -D REMOTE_INSERTS=1 -D USE_MPSC=0 -D USE_FILTER=0
+	$(CPP) -c cm_benchmark.cpp -D REMOTE_INSERTS=1 
 
 cm_remote_inserts_mpsc.o: cm_benchmark.cpp
-	$(CPP) -c cm_benchmark.cpp -D SHARED_SKETCH=0 -D LOCAL_COPIES=0 -D HYBRID=0 -D REMOTE_INSERTS=0 -D USE_MPSC=1 -D USE_FILTER=0
+	$(CPP) -c cm_benchmark.cpp -D USE_MPSC=1 
 
 cm_remote_inserts_filtered.o: cm_benchmark.cpp
-	$(CPP) -c cm_benchmark.cpp -D SHARED_SKETCH=0 -D LOCAL_COPIES=0 -D HYBRID=0 -D REMOTE_INSERTS=1 -D USE_MPSC=0 -D USE_FILTER=1
+	$(CPP) -c cm_benchmark.cpp -D REMOTE_INSERTS=1 -D USE_FILTER=1
 
 cm_shared.out:  relation.o xis.o sketches.o cm_shared.o
 	$(CPP) -o ${BIN}/$@ relation.o xis.o sketches.o cm_benchmark.o 
