@@ -6,6 +6,14 @@
 
 #define MAX_FILTER_SLACK 5
 
+void printFilter(FilterStruct filter){
+    int i=0;
+    for (i=0;i<16;i++){
+        printf("%d ", filter.filter_count[i]);
+    }
+    printf("\n");
+}
+
 int findMinIndex(FilterStruct* filter){
     int min = filter->filter_count[0];
     int index = 0;

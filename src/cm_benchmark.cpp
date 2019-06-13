@@ -116,13 +116,9 @@ void threadWork(threadDataStruct *localThreadData)
     }
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
-    // if(localThreadData->tid==1){
-    //     printf("Thread %d Filter: \n",localThreadData->tid);
-    //     for(i=0; i<16;i++){
-    //         printf(" key: %d value: %u\n", localThreadData->filter_id[i],localThreadData->filter_count[i]);
-    //     }
+    // if (localThreadData->tid ==1){
+    //     printFilter(localThreadData->Filter);
     // }
-    //printf("\n");
 }
 
 
