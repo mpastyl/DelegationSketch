@@ -1,5 +1,5 @@
 INCLUDE = -I. -I../include
-CPP = g++ -O2 -Wno-deprecated -pthread -std=c++11 $(INCLUDE)
+CPP = g++ -O2 -Wno-deprecated -pthread -std=c++11 $(INCLUDE) -DITHACA=$(ITHACA)
 CPPDEBUG = g++ -O2 -Wno-deprecated -g
 DEPS = thread_data.h thread_utils.h cm_benchmark.h barrier.h data_generator.h gen_scheme.h range_sum.h relation.h RM7_range_sum.h sampling.h sketches.h utils.h xis.h
 BIN = ../bin

@@ -27,6 +27,10 @@
 #define USE_FILTER 0
 #endif
 
+#ifndef ITHACA
+#define ITHACA 0
+#endif
+
 int QUERRY_RATE;
 int DURATION;
 void * threadEntryPoint(void * threadArgs);
