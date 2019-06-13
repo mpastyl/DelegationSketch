@@ -70,7 +70,11 @@ void insert(threadDataStruct * localThreadData, unsigned int key){
 #elif LOCAL_COPIES
     localThreadData->theSketch->Update_Sketch(key, 1.0);
 #elif SHARED_SKETCH
+    #if USE_FILTER
+    updateWithFilter(localThreadData, key);
+    #else
     localThreadData->theGlobalSketch->Update_Sketch_Atomics(key, 1.0);
+    #endif
 #endif
 }
 

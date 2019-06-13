@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered"]
+versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered"]
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
 thread_list=[20]

@@ -3,7 +3,7 @@ make clean
 make all
 cd ../
 
-versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered"
+versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered cm_shared_filtered"
 
 buckets=512
 rows=32
