@@ -1,6 +1,7 @@
 #ifndef CM_BENCHMARK_H
 #define CM_BENCHMARK_H
 
+#include "thread_data.h"
 
 //define preprocessor flags that are not set in the Makefile
 #ifndef SHARED_SKETCH
@@ -34,4 +35,5 @@
 int QUERRY_RATE;
 int DURATION;
 void * threadEntryPoint(void * threadArgs);
+void insert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment);
 #endif

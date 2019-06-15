@@ -37,9 +37,6 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
     #elif REMOTE_INSERTS || USE_MPSC
     double approximate_freq = localThreadData->sketchArray[key % numberOfThreads]->Query_Sketch(key);
-        #if USE_FILTER
-        approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-        #endif
     #elif LOCAL_COPIES
     double approximate_freq = 0;
     for (int j=0; j<numberOfThreads; j++){
@@ -50,31 +47,27 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     #else 
         #error "Preprocessor flags not properly set"
     #endif
+    #if USE_FILTER
+    approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+    #endif
+
     return approximate_freq;
 }
 
-void insert(threadDataStruct * localThreadData, unsigned int key){
+void insert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
 #if USE_MPSC
     int owner = key % numberOfThreads; 
     localThreadData->sketchArray[owner]->enqueueRequest(key);
     localThreadData->theSketch->serveAllRequests(); //Serve any requests you can find in your own queue
 #elif REMOTE_INSERTS
-    #if USE_FILTER
-    updateWithFilter(localThreadData, key);
-    #else
     int owner = key % numberOfThreads;
-    localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, 1.0);
-    #endif
+    localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, increment);
 #elif HYBRID
     localThreadData->theSketch->Update_Sketch_Hybrid(key, 1.0, HYBRID);
 #elif LOCAL_COPIES
-    localThreadData->theSketch->Update_Sketch(key, 1.0);
+    localThreadData->theSketch->Update_Sketch(key, double(increment));
 #elif SHARED_SKETCH
-    #if USE_FILTER
-    updateWithFilter(localThreadData, key);
-    #else
-    localThreadData->theGlobalSketch->Update_Sketch_Atomics(key, 1.0);
-    #endif
+    localThreadData->theGlobalSketch->Update_Sketch_Atomics(key, increment);
 #endif
 }
 
@@ -106,7 +99,11 @@ void threadWork(threadDataStruct *localThreadData)
                 localThreadData->returnData += approximate_freq;
             }
             numInserts++;
-            insert(localThreadData, (*localThreadData->theData->tuples)[i]);
+            #if USE_FILTER
+            updateWithFilter(localThreadData,(*localThreadData->theData->tuples)[i]);
+            #else
+            insert(localThreadData, (*localThreadData->theData->tuples)[i], 1);
+            #endif
             localThreadData->elementsProcessed++;
         }
         //If duration is 0 then I only loop once over the input. This is to do accuracy tests.
@@ -278,9 +275,6 @@ int main(int argc, char **argv)
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
             #elif REMOTE_INSERTS || USE_MPSC
             double approximate_freq = cmArray[i % numberOfThreads]->Query_Sketch(i);
-            #if USE_FILTER
-                approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-            #endif
             #elif LOCAL_COPIES
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
@@ -288,6 +282,9 @@ int main(int argc, char **argv)
             }
             #elif SHARED_SKETCH
             double approximate_freq = globalSketch->Query_Sketch(i);
+            #endif
+            #if USE_FILTER
+                approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
             #endif
             fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
         }

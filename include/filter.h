@@ -3,6 +3,7 @@
 
 #include "sketches.h"
 #include "thread_data.h"
+#include "cm_benchmark.h"
 
 #define MAX_FILTER_SLACK 5
 
@@ -57,7 +58,7 @@ void updateWithFilter(threadDataStruct * localThreadData, unsigned int key){
     int qRes = queryFilter(key,filter->filter_id);
     if (qRes == -1){
         // not in the filter but filter has space
-        if (filter->filterFull < 16){
+        if (filter->filterFull <= 16){
             filter->filter_id[filter->filterFull] = key;
             filter->filter_count[filter->filterFull] = 1;
             filter->filterFull++;
@@ -65,11 +66,13 @@ void updateWithFilter(threadDataStruct * localThreadData, unsigned int key){
         }
         // not in the filter and filter is full, just do the insert in the normal way?
         // OR evict the old minimum and place the new element there
+        // Note: when evicting an item might have been pushed in the sketch already in the past
         else{
             int minIndex = findMinIndex(filter);
             //evict the old minimum
-            int owner = filter->filter_id[minIndex] % numberOfThreads; 
-            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(filter->filter_id[minIndex], filter->filter_count[minIndex]);
+            if (filter->filter_count[minIndex] % MAX_FILTER_SLACK){
+                insert(localThreadData, filter->filter_id[minIndex], filter->filter_count[minIndex] % MAX_FILTER_SLACK);
+            }
             //place the new element there
             filter->filter_id[minIndex] = key;
             filter->filter_count[minIndex] = 1;
@@ -80,9 +83,7 @@ void updateWithFilter(threadDataStruct * localThreadData, unsigned int key){
         filter->filterCount++;
         if (!(filter->filter_count[qRes] % MAX_FILTER_SLACK)){
             unsigned int new_key = (unsigned int )(filter->filter_id[qRes]);
-            int owner = new_key % numberOfThreads; 
-            localThreadData->sketchArray[owner]->Update_Sketch_Atomics(new_key, MAX_FILTER_SLACK);
-            //filter->filter_count[qRes] = 0;
+            insert(localThreadData, key, MAX_FILTER_SLACK);
         }
     }
     // if (localThreadData->filterCount == 20){

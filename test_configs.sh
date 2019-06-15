@@ -4,7 +4,7 @@ thread_list=`seq 1 28`
 buckets=512
 rows=32
 
-versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered cm_shared_filtered"
+versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered cm_shared_filtered cm_local_copies_filtered"
 
 cd src
 make clean
@@ -20,7 +20,7 @@ do
         rm -f logs/${version}_${threads}_accuracy.log
         for queries in $query_rates
         do
-            if [ "$version" != "cm_shared" ]; then
+            if [ "$version" != "cm_shared" ] && [ "$version" != "cm_shared_filtered" ]; then
             echo "Using $rows * " $(($buckets/$threads))
                 ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 1 1 $threads $queries 0 >/dev/null
             else
@@ -40,7 +40,7 @@ do
         rm -f logs/${version}_${queries}_queries.log
         for threads in $thread_list
         do
-            if [ "$version" != "cm_shared" ]; then
+            if [ "$version" != "cm_shared" ] && [ "$version" != "cm_shared_filtered" ]; then
                 ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries.log
             else
                 ./bin/$version.out 10000 60000 $buckets $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries.log
@@ -59,7 +59,7 @@ do
         rm -f logs/${version}_${threads}_threads.log
         for queries in $query_rates
         do
-            if [ "$version" != "cm_shared" ]; then
+            if [ "$version" != "cm_shared" ] && [ "$version" != "cm_shared_filtered" ]; then
                 ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${threads}_threads.log
             else
                 ./bin/$version.out 10000 60000 $buckets $rows 1 1 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${threads}_threads.log
