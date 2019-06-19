@@ -67,3 +67,22 @@ do
         done
     done
 done
+
+skew_rates="0 0.25 0.5 0.75 1 1.75 2 2.25 2.5 2.75 3 3.5 4"
+thread_list="28"
+for version in $versions
+do
+    for threads  in $thread_list
+    do
+        echo ${version} ${threads}
+        rm -f logs/skew_${version}_${threads}_threads.log
+        for skew in $skew_rates
+        do
+            if [ "$version" != "cm_shared" ] && [ "$version" != "cm_shared_filtered" ]; then
+                ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 $skew 0 1 $threads 0 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/skew_${version}_${threads}_threads.log
+            else
+                ./bin/$version.out 10000 60000 $buckets $rows 1 $skew 0 1 $threads 0 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/skew_${version}_${threads}_threads.log
+            fi
+        done
+    done
+done

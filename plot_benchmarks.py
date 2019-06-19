@@ -53,3 +53,17 @@ plt.legend()
 plt.xlabel("Query rate (%)")
 plt.ylabel("Mops/sec")
 plt.show()
+
+skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.75 2 2.25 2.5 2.75 3 3.5 4"
+skew_rates = [x for x in skew_rates_raw_list.split()]
+threads="28"
+SkewnesData = {}
+for version in versions:
+    SkewnesData[version] = read_perf("logs/skew_cm_"+version+"_"+threads+"_threads.log")
+
+for version in versions:
+    plt.plot(skew_rates,SkewnesData[version], label = version)
+plt.legend()
+plt.xlabel("Skew parameter (%)")
+plt.ylabel("Mops/sec")
+plt.show()
