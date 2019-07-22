@@ -75,7 +75,7 @@ void updateWithFilter(threadDataStruct * localThreadData, unsigned int key){
             }
             //place the new element there
             filter->filter_id[minIndex] = key;
-            filter->filter_count[minIndex] = 1;
+            filter->filter_count[minIndex] = filter->filter_count[minIndex] - filter->filter_count[minIndex] % MAX_FILTER_SLACK;
         }
     }
     else{ 
@@ -86,18 +86,5 @@ void updateWithFilter(threadDataStruct * localThreadData, unsigned int key){
             insert(localThreadData, key, MAX_FILTER_SLACK);
         }
     }
-    // if (localThreadData->filterCount == 20){
-    //     for (int j=0; j<16; j++){
-    //         if (localThreadData->filter_count[j]){
-    //             unsigned int new_key = localThreadData->filter_id[j];
-    //             int owner = new_key % numberOfThreads; 
-    //             localThreadData->sketchArray[owner]->Update_Sketch_Atomics(new_key,localThreadData->filter_count[j]);
-    //             localThreadData->filter_count[j] = 0;
-    //             localThreadData->filter_id[j] = -1;//FIXME
-    //         }
-    //     }
-    //     localThreadData->filterCount = 0;
-    //     localThreadData->filterFull = 0;
-    // }
 }
 #endif
