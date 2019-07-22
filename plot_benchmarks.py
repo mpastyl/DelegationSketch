@@ -64,6 +64,6 @@ for version in versions:
 for version in versions:
     plt.plot(skew_rates,SkewnesData[version], label = version)
 plt.legend()
-plt.xlabel("Skew parameter (%)")
+plt.xlabel("Skew parameter")
 plt.ylabel("Mops/sec")
 plt.show()
