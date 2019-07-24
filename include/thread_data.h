@@ -8,9 +8,11 @@
 #include "sketches.h"
 //#include "cm_benchmark.h"
 
+#define FILTER_SIZE 16
+
 typedef struct{
-    int filter_id[16];
-    unsigned int filter_count[16];
+    int filter_id[FILTER_SIZE];
+    unsigned int filter_count[FILTER_SIZE];
     int filterCount;
     int filterFull;
 }FilterStruct;

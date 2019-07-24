@@ -9,7 +9,7 @@
 
 void printFilter(FilterStruct filter){
     int i=0;
-    for (i=0;i<16;i++){
+    for (i=0;i<FILTER_SIZE;i++){
         printf("%d ", filter.filter_count[i]);
     }
     printf("\n");
@@ -19,7 +19,7 @@ int findMinIndex(FilterStruct* filter){
     int min = filter->filter_count[0];
     int index = 0;
     int i=1;
-    for (i=1; i<16; i++){
+    for (i=1; i<FILTER_SIZE; i++){
         if (filter->filter_count[i] < min){
             index = i;
             min = filter->filter_count[i];
@@ -58,7 +58,7 @@ void updateWithFilter(threadDataStruct * localThreadData, unsigned int key){
     int qRes = queryFilter(key,filter->filter_id);
     if (qRes == -1){
         // not in the filter but filter has space
-        if (filter->filterFull <= 16){
+        if (filter->filterFull < FILTER_SIZE){
             filter->filter_id[filter->filterFull] = key;
             filter->filter_count[filter->filterFull] = 1;
             filter->filterFull++;
