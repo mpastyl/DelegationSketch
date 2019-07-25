@@ -3,7 +3,7 @@ import math
 
 threads = range(1,29)
 query_rates = [0,2,4,6]
-versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered"] 
+versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch"] 
 
 def read_perf(filename):
     returnList = []  
@@ -34,7 +34,7 @@ for queries in query_rates:
         serial_ax[plot_count].legend(loc=2)
         serial_ax[plot_count].set_xlabel("Threads")
         serial_ax[plot_count].set_ylabel("Mops/sec")
-        serial_ax[plot_count].set_ylim(0,70)
+        #serial_ax[plot_count].set_ylim(0,70)
     
     plot_count +=1
 #plt.xlabel("Threads")

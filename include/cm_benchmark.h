@@ -28,6 +28,10 @@
 #define USE_FILTER 0
 #endif
 
+#ifndef AUGMENTED_SKETCH
+#define AUGMENTED_SKETCH 0
+#endif
+
 #ifndef ITHACA
 #define ITHACA 0
 #endif

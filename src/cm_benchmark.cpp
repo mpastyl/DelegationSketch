@@ -42,6 +42,17 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     for (int j=0; j<numberOfThreads; j++){
         approximate_freq += localThreadData->sketchArray[j]->Query_Sketch(key);
     }
+    #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
+    double approximate_freq = 0;
+    for (int j=0; j<numberOfThreads; j++){
+        unsigned int countInFilter = queryFilter(key, &(localThreadData->Filter));
+        if (countInFilter){
+            approximate_freq += countInFilter;
+        }
+        else{
+            approximate_freq += localThreadData->sketchArray[j]->Query_Sketch(key);
+        }
+    }
     #elif SHARED_SKETCH
     double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
     #else 
@@ -64,7 +75,7 @@ void insert(threadDataStruct * localThreadData, unsigned int key, unsigned int i
     localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, increment);
 #elif HYBRID
     localThreadData->theSketch->Update_Sketch_Hybrid(key, 1.0, HYBRID);
-#elif LOCAL_COPIES
+#elif LOCAL_COPIES || AUGMENTED_SKETCH
     localThreadData->theSketch->Update_Sketch(key, double(increment));
 #elif SHARED_SKETCH
     localThreadData->theGlobalSketch->Update_Sketch_Atomics(key, increment);
@@ -99,7 +110,9 @@ void threadWork(threadDataStruct *localThreadData)
                 localThreadData->returnData += approximate_freq;
             }
             numInserts++;
-            #if USE_FILTER
+            #if AUGMENTED_SKETCH
+            insertFilterNoWriteBack(localThreadData,(*localThreadData->theData->tuples)[i]);
+            #elif USE_FILTER
             insertFilterWithWriteBack(localThreadData,(*localThreadData->theData->tuples)[i]);
             #else
             insert(localThreadData, (*localThreadData->theData->tuples)[i], 1);
@@ -280,6 +293,17 @@ int main(int argc, char **argv)
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
                 approximate_freq += cmArray[j]->Query_Sketch(i);
+            }
+            #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
+            double approximate_freq = 0;
+            for (int j=0; j<numberOfThreads; j++){
+                unsigned int countInFilter = queryFilter(i, &(threadData[j].Filter));
+                if (countInFilter){
+                    approximate_freq += countInFilter;
+                }
+                else{
+                    approximate_freq += cmArray[j]->Query_Sketch(i);
+                }
             }
             #elif SHARED_SKETCH
             double approximate_freq = globalSketch->Query_Sketch(i);
