@@ -15,7 +15,6 @@ typedef struct{
     unsigned int filter_count[FILTER_SIZE];
     unsigned int filter_old_count[FILTER_SIZE];
     int filterCount;
-    int filterFull;
     char padding[64]; // Need to figure out why it breaks for some sizes
 }FilterStruct;
 

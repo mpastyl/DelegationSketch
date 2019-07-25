@@ -153,7 +153,6 @@ void * threadEntryPoint(void * threadArgs){
         localThreadData->Filter.filter_old_count[i] = 0;
     }
     localThreadData->Filter.filterCount = 0;
-    localThreadData->Filter.filterFull = 0;
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);

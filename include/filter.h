@@ -67,10 +67,10 @@ void insertFilterWithWriteBack(threadDataStruct * localThreadData, unsigned int 
     int qRes = queryFilterIndex(key,filter->filter_id);
     if (qRes == -1){
         // not in the filter but filter has space
-        if (filter->filterFull < FILTER_SIZE){
-            filter->filter_id[filter->filterFull] = key;
-            filter->filter_count[filter->filterFull] = 1;
-            filter->filterFull++;
+        if (filter->filterCount < FILTER_SIZE){
+            filter->filter_id[filter->filterCount] = key;
+            filter->filter_count[filter->filterCount] = 1;
+            filter->filterCount++;
         }
         // not in the filter and filter is full
         // evict the old minimum and place the new element there
@@ -103,11 +103,11 @@ void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int ke
     int qRes = queryFilterIndex(key,filter->filter_id);
     if (qRes == -1){
         // not in the filter but filter has space
-        if (filter->filterFull < FILTER_SIZE){
-            filter->filter_id[filter->filterFull] = key;
-            filter->filter_count[filter->filterFull] = 1;
-            filter->filter_old_count[filter->filterFull] = 0;
-            filter->filterFull++;
+        if (filter->filterCount < FILTER_SIZE){
+            filter->filter_id[filter->filterCount] = key;
+            filter->filter_count[filter->filterCount] = 1;
+            filter->filter_old_count[filter->filterCount] = 0;
+            filter->filterCount++;
         }
         // not in the filter and filter is full
         // 1) insert the new item, 2) find the new frequency and 3) decide if you should evict or keep the old
