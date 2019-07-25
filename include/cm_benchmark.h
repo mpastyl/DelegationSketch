@@ -32,6 +32,10 @@
 #define AUGMENTED_SKETCH 0
 #endif
 
+#ifndef DELAGATION_FILTERS
+#define DELEGATION_FILTERS 0
+#endif
+
 #ifndef ITHACA
 #define ITHACA 0
 #endif

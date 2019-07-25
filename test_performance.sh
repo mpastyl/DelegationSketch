@@ -1,10 +1,10 @@
 RUN_ON_ITHACA=0
-thread_list=`seq 1 28`
+thread_list=`seq 1 2 28`
 
 buckets=512
 rows=32
 
-versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered cm_shared_filtered cm_local_copies_filtered cm_augmented_sketch"
+versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered cm_shared_filtered cm_local_copies_filtered cm_augmented_sketch cm_delegation_filters"
 
 cd src
 make clean
@@ -12,7 +12,7 @@ make all ITHACA=$RUN_ON_ITHACA
 cd ../
 
 
-query_rates="0 2 4 6"
+query_rates="0 2 4"
 for version in $versions
 do
     echo $version

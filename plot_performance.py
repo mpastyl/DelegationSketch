@@ -1,9 +1,9 @@
 from matplotlib import pyplot as plt
 import math
 
-threads = range(1,29)
-query_rates = [0,2,4,6]
-versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch"] 
+threads = range(1,29,2)
+query_rates = [0,2,4]
+versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters"] 
 
 def read_perf(filename):
     returnList = []  

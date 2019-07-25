@@ -97,7 +97,7 @@ void insertFilterWithWriteBack(threadDataStruct * localThreadData, unsigned int 
 }
 
 //NOTE: only works with the local copies version
-void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int key){
+void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
 
     FilterStruct * filter = &(localThreadData->Filter);
     int qRes = queryFilterIndex(key,filter->filter_id);
@@ -105,14 +105,14 @@ void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int ke
         // not in the filter but filter has space
         if (filter->filterCount < FILTER_SIZE){
             filter->filter_id[filter->filterCount] = key;
-            filter->filter_count[filter->filterCount] = 1;
+            filter->filter_count[filter->filterCount] = increment;
             filter->filter_old_count[filter->filterCount] = 0;
             filter->filterCount++;
         }
         // not in the filter and filter is full
         // 1) insert the new item, 2) find the new frequency and 3) decide if you should evict or keep the old
         else{
-            unsigned int estimate = (unsigned int) localThreadData->theSketch->Update_Sketch_and_Query(key, 1);
+            unsigned int estimate = (unsigned int) localThreadData->theSketch->Update_Sketch_and_Query(key, increment);
             int minIndex = findMinIndex(filter);
             if (estimate > filter->filter_count[minIndex]){
                 int drift = filter->filter_count[minIndex] - filter->filter_old_count[minIndex];
@@ -129,8 +129,26 @@ void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int ke
     }
     else{
         // found the new item in the filter. Just increase the count but don't write back. 
+        filter->filter_count[qRes] += increment;
+    }
+}
+
+int tryInsertInDelegatingFilter(FilterStruct * filter, unsigned int key){
+    if (filter->filterCount == FILTER_SIZE) return 0;
+
+    int qRes = queryFilterIndex(key,filter->filter_id);
+    if (qRes == -1){
+        // not in the filter but filter has space
+        if (filter->filterCount < FILTER_SIZE){
+            filter->filter_id[filter->filterCount] = key;
+            filter->filter_count[filter->filterCount] = 1;
+            filter->filterCount++;
+        }
+    }
+    else{
         filter->filter_count[qRes]++;
     }
+    return 1;
 }
 
 #endif
