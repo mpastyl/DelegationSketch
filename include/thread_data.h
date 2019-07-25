@@ -13,6 +13,7 @@
 typedef struct{
     int filter_id[FILTER_SIZE];
     unsigned int filter_count[FILTER_SIZE];
+    unsigned int filter_old_count[FILTER_SIZE];
     int filterCount;
     int filterFull;
 }FilterStruct;

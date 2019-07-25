@@ -166,6 +166,8 @@ class alignas(64) Count_Min_Sketch : public Sketch
     virtual void Clear_Sketch();
 
     virtual void Update_Sketch(unsigned int key, double func);
+    
+    double Update_Sketch_and_Query(unsigned int key, double func);
 
     void Update_Sketch_Atomics(unsigned int key, unsigned int func);
     

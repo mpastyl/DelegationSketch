@@ -100,7 +100,7 @@ void threadWork(threadDataStruct *localThreadData)
             }
             numInserts++;
             #if USE_FILTER
-            updateWithFilter(localThreadData,(*localThreadData->theData->tuples)[i]);
+            insertFilterWithWriteBack(localThreadData,(*localThreadData->theData->tuples)[i]);
             #else
             insert(localThreadData, (*localThreadData->theData->tuples)[i], 1);
             #endif
@@ -134,9 +134,10 @@ void * threadEntryPoint(void * threadArgs){
     localThreadData->startIndex = tid * threadWorkSize;
     localThreadData->endIndex =  localThreadData->startIndex + threadWorkSize; //Stop before you reach that index
 
-    for (int i=0; i<16; i++){
+    for (int i=0; i<FILTER_SIZE; i++){
         localThreadData->Filter.filter_id[i] = -1;
         localThreadData->Filter.filter_count[i] = 0;
+        localThreadData->Filter.filter_old_count[i] = 0;
     }
     localThreadData->Filter.filterCount = 0;
     localThreadData->Filter.filterFull = 0;

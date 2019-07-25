@@ -430,6 +430,21 @@ void Count_Min_Sketch::Update_Sketch(unsigned int key, double func)
   }
 }
 
+double Count_Min_Sketch::Update_Sketch_and_Query(unsigned int key, double func)
+{
+  unsigned int min_count = UINT_MAX;
+  for (int i = 0; i < rows_no; i++)
+  {
+    int bucket = (int)xi_bucket[i]->element(key);
+    sketch_elem[i * buckets_no + bucket] = sketch_elem[i * buckets_no + bucket] + func;
+    if (sketch_elem[i * buckets_no + bucket] < min_count)
+    {
+	    min_count = sketch_elem[i * buckets_no + bucket];
+    }
+  }
+  return min_count;
+}
+
 void Count_Min_Sketch::Update_Sketch_Atomics(unsigned int key, unsigned int func)
 {
   for (int i = 0; i < rows_no; i++)
@@ -464,7 +479,7 @@ double Count_Min_Sketch::Query_Sketch(unsigned int key)
     int bucket = (int)xi_bucket[i]->element(key);
     if (sketch_elem[i * buckets_no + bucket] < min_count)
     {
-	min_count = sketch_elem[i * buckets_no + bucket];
+	    min_count = sketch_elem[i * buckets_no + bucket];
     }
   }
   return min_count;
