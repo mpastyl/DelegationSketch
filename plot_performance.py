@@ -1,6 +1,10 @@
 from matplotlib import pyplot as plt
 import math
 
+from itertools import cycle
+lines = ["-","--","-.",":"]
+linecycler = cycle(lines)
+
 threads = range(1,29,2)
 query_rates = [0,2,4]
 versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters"] 
@@ -30,7 +34,7 @@ for row in ax:
 plot_count = 0
 for queries in query_rates:
     for version in versions:
-        serial_ax[plot_count].plot(threads,ScalingData[(version,queries)], label = version+" - "+str(queries)+"%")
+        serial_ax[plot_count].plot(threads,ScalingData[(version,queries)], next(linecycler), label = version+" - "+str(queries)+"%")
         serial_ax[plot_count].legend(loc=2)
         serial_ax[plot_count].set_xlabel("Threads")
         serial_ax[plot_count].set_ylabel("Mops/sec")
@@ -48,7 +52,7 @@ for version in versions:
     QueriesData[version] = read_perf("logs/cm_"+version+"_"+threads+"_threads.log")
 
 for version in versions:
-    plt.plot(query_rates,QueriesData[version], label = version)
+    plt.plot(query_rates,QueriesData[version],  next(linecycler), label = version)
 plt.legend()
 plt.xlabel("Query rate (%)")
 plt.ylabel("Mops/sec")
@@ -62,7 +66,7 @@ for version in versions:
     SkewnesData[version] = read_perf("logs/skew_cm_"+version+"_"+threads+"_threads.log")
 
 for version in versions:
-    plt.plot(skew_rates,SkewnesData[version], label = version)
+    plt.plot(skew_rates,SkewnesData[version], next(linecycler), label = version)
 plt.legend()
 plt.xlabel("Skew parameter")
 plt.ylabel("Mops/sec")
