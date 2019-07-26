@@ -32,7 +32,7 @@
 #define AUGMENTED_SKETCH 0
 #endif
 
-#ifndef DELAGATION_FILTERS
+#ifndef DELEGATION_FILTERS
 #define DELEGATION_FILTERS 0
 #endif
 

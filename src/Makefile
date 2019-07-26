@@ -97,7 +97,7 @@ cm_local_copies_filtered.out:  relation.o xis.o sketches.o cm_local_copies_filte
 cm_augmented_sketch.out:  relation.o xis.o sketches.o cm_augmented_sketch.o
 	$(CPP) -o ${BIN}/$@ relation.o xis.o sketches.o cm_benchmark.o 
 
-cm_delegation_filters.out:  relation.o xis.o sketches.o cm_augmented_sketch.o
+cm_delegation_filters.out:  relation.o xis.o sketches.o cm_delegation_filters.o
 	$(CPP) -o ${BIN}/$@ relation.o xis.o sketches.o cm_benchmark.o 
 
 clean:

@@ -68,11 +68,10 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
 }
 
 void serveDelegatedInserts(threadDataStruct * localThreadData){
-
     // Check if needed?
     for (int thread=0; thread<numberOfThreads; thread++){
         // if Filter is full
-        FilterStruct * filter  = &(filterMatrix[thread * localThreadData->tid]);
+        FilterStruct * filter  = &(filterMatrix[thread * numberOfThreads + localThreadData->tid]);
         if (filter->filterCount == FILTER_SIZE){
             // parse it and add each element to your own filter
             for (int i=0; i<FILTER_SIZE;i++){
@@ -91,8 +90,8 @@ void serveDelegatedInserts(threadDataStruct * localThreadData){
 
 void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
     int owner = key % numberOfThreads;
-    FilterStruct * filter = &(filterMatrix[localThreadData->tid * owner]);
-    //try to insert in filterMatrix[localThreadData->tid * owner]
+    FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
+    //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
     while(!tryInsertInDelegatingFilter(filter, key)){
         //If it is full? Maybe try to serve your own pending requests and try again?
         serveDelegatedInserts(localThreadData);
@@ -330,7 +329,7 @@ int main(int argc, char **argv)
             #if HYBRID
             double approximate_freq = globalSketch->Query_Sketch(i);
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-            #elif REMOTE_INSERTS || USE_MPSC || DELAGATION_FILTERS
+            #elif REMOTE_INSERTS || USE_MPSC || DELEGATION_FILTERS
             double approximate_freq = cmArray[i % numberOfThreads]->Query_Sketch(i);
             #elif LOCAL_COPIES
             double approximate_freq = 0;
