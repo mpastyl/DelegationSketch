@@ -92,7 +92,7 @@ void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsign
     int owner = key % numberOfThreads;
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
-    while(!tryInsertInDelegatingFilter(filter, key)){
+    while((!tryInsertInDelegatingFilter(filter, key)) && startBenchmark){   // I might deadlock if i am waiting for a thread that finished the benchmark
         //If it is full? Maybe try to serve your own pending requests and try again?
         serveDelegatedInserts(localThreadData);
     }
