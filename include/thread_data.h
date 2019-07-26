@@ -11,7 +11,7 @@
 #define FILTER_SIZE 16
 
 typedef struct{
-    int filter_id[FILTER_SIZE];
+    alignas(32) int filter_id[FILTER_SIZE];
     unsigned int filter_count[FILTER_SIZE];
     unsigned int filter_old_count[FILTER_SIZE];
     int filterCount;

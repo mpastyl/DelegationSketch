@@ -28,7 +28,7 @@ int findMinIndex(FilterStruct* filter){
     return index;
 }
 
-int queryFilterIndex(unsigned int key, int * filterIndexes){
+int queryFilterIndexScalar(unsigned int key, int * filterIndexes){
     for (int i=0; i< FILTER_SIZE; i++){
         if (filterIndexes[i] == key){
             return i;
@@ -38,7 +38,7 @@ int queryFilterIndex(unsigned int key, int * filterIndexes){
 }
 //Checks if key is in the filter.
 //Return: the index if key is in the filter, otherwise -1
-int queryFilterIndexVec(unsigned int key, int * filterIndexes){
+int queryFilterIndex(unsigned int key, int * filterIndexes){
     const __m128i s_item = _mm_set1_epi32(key);
     __m128i *filter = (__m128i *)filterIndexes;
     
