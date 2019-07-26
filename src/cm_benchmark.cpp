@@ -211,7 +211,7 @@ void * threadEntryPoint(void * threadArgs){
 
 void postProcessing(){
 
-    int sumNumQueries, sumNumInserts = 0;
+    long int sumNumQueries, sumNumInserts = 0;
     double sumReturnValues = 0;
     for (int i=0; i<numberOfThreads; i++){
         sumNumQueries += threadData[i].numQueries;
@@ -219,7 +219,7 @@ void postProcessing(){
         sumReturnValues += threadData[i].returnData;
     }
     float percentage  = (float) sumNumQueries * 100/(sumNumQueries + sumNumInserts);
-    printf("LOG: num Queries: %d, num Inserts %d, percentage %f garbage print %f\n",sumNumQueries, sumNumInserts, percentage, sumReturnValues);
+    printf("LOG: num Queries: %ld, num Inserts %ld, percentage %f garbage print %f\n",sumNumQueries, sumNumInserts, percentage, sumReturnValues);
 }
 
 int main(int argc, char **argv)
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
         postProcessing();
 
         printf("Total insertion time (ms): %lu\n",getTimeMs());
-        int totalElementsProcessed = 0;
+        long int totalElementsProcessed = 0;
         for (i=0; i<numberOfThreads; i++){
             totalElementsProcessed += threadData[i].elementsProcessed;
         }
