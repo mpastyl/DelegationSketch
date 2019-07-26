@@ -20,6 +20,10 @@ FilterStruct * filterMatrix;
 
 int tuples_no;
 
+#if (!DURATION && DELEGATION_FILTERS) 
+volatile int threadsFinished = 0;
+#endif
+
 unsigned int Random_Generate()
 {
     unsigned int x = rand();
@@ -160,6 +164,13 @@ void threadWork(threadDataStruct *localThreadData)
             break;
         }
     }
+    #if (!DURATION && DELEGATION_FILTERS) 
+    // keep clearing your backlog, other wise we might endup in a deadlock
+    __sync_fetch_and_add( &threadsFinished, 1);
+    while( threadsFinished < numberOfThreads){
+        serveDelegatedInserts(localThreadData); 
+    }
+    #endif
     localThreadData->numQueries = numQueries;
     localThreadData->numInserts = numInserts;
     // if (localThreadData->tid ==1){
