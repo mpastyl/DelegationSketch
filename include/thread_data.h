@@ -30,6 +30,9 @@ typedef struct
     int endIndex;
     double returnData;
     FilterStruct Filter;
+    int * pendingQueriesKeys; // need volatiles?
+    unsigned int * pendingQueriesCounts;
+    volatile int * pendingQueriesFlags;
     int numQueries;
     int numInserts;
     Count_Min_Sketch ** sketchArray;

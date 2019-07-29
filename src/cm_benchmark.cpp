@@ -37,40 +37,6 @@ int shouldQuery(int index, int tid){
     return (index + tid)% 100; //NOTE: not random enough?
 }
 
-double querry(threadDataStruct * localThreadData, unsigned int key){
-    #if HYBRID
-    double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
-    approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-    #elif REMOTE_INSERTS || USE_MPSC || DELEGATION_FILTERS
-    double approximate_freq = localThreadData->sketchArray[key % numberOfThreads]->Query_Sketch(key);
-    #elif LOCAL_COPIES
-    double approximate_freq = 0;
-    for (int j=0; j<numberOfThreads; j++){
-        approximate_freq += localThreadData->sketchArray[j]->Query_Sketch(key);
-    }
-    #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
-    double approximate_freq = 0;
-    for (int j=0; j<numberOfThreads; j++){
-        unsigned int countInFilter = queryFilter(key, &(localThreadData->Filter));
-        if (countInFilter){
-            approximate_freq += countInFilter;
-        }
-        else{
-            approximate_freq += localThreadData->sketchArray[j]->Query_Sketch(key);
-        }
-    }
-    #elif SHARED_SKETCH
-    double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
-    #else 
-        #error "Preprocessor flags not properly set"
-    #endif
-    #if USE_FILTER
-    approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-    #endif
-
-    return approximate_freq;
-}
-
 void serveDelegatedInserts(threadDataStruct * localThreadData){
     // Check if needed?
     for (int thread=0; thread<numberOfThreads; thread++){
@@ -92,15 +58,94 @@ void serveDelegatedInserts(threadDataStruct * localThreadData){
     }
 }
 
+void serveDelegatedQueries(threadDataStruct *localThreadData){
+    for (int i=0; i<numberOfThreads; i++){
+        if (localThreadData->pendingQueriesFlags[i]){
+            unsigned int countInFilter = queryFilter(localThreadData->pendingQueriesKeys[i], &(localThreadData->Filter));
+            if (countInFilter){
+                localThreadData->pendingQueriesCounts[i] = countInFilter;
+            }
+            else{
+                localThreadData->pendingQueriesCounts[i] = localThreadData->theSketch->Query_Sketch(localThreadData->pendingQueriesKeys[i]);
+            }
+            //Also check the delegation filters
+            for (int j =0; j < numberOfThreads; j++){
+                localThreadData->pendingQueriesCounts[i] += queryFilter(localThreadData->pendingQueriesKeys[i], &(filterMatrix[j * numberOfThreads + localThreadData->tid]));
+            }
+            localThreadData->pendingQueriesFlags[i] = 0;
+        }
+    }
+}
+
+void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
+    serveDelegatedInserts(localThreadData);
+    serveDelegatedQueries(localThreadData);
+}
+
 void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
     int owner = key % numberOfThreads;
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
     while((!tryInsertInDelegatingFilter(filter, key)) && startBenchmark){   // I might deadlock if i am waiting for a thread that finished the benchmark
         //If it is full? Maybe try to serve your own pending requests and try again?
-        serveDelegatedInserts(localThreadData);
+        serveDelegatedInsertsAndQueries(localThreadData);
     }
 }
+
+unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key){
+    int owner = key % numberOfThreads;
+    while (threadData[owner].pendingQueriesFlags[localThreadData->tid]  && startBenchmark){
+        serveDelegatedInsertsAndQueries(localThreadData);
+    }
+
+    threadData[owner].pendingQueriesKeys[localThreadData->tid] = key;
+    threadData[owner].pendingQueriesCounts[localThreadData->tid] = 0;
+    threadData[owner].pendingQueriesFlags[localThreadData->tid] = 1;
+
+    while (threadData[owner].pendingQueriesFlags[localThreadData->tid] && startBenchmark){
+        serveDelegatedInsertsAndQueries(localThreadData);
+    }
+    return threadData[owner].pendingQueriesCounts[localThreadData->tid];
+}
+
+double querry(threadDataStruct * localThreadData, unsigned int key){
+    #if HYBRID
+    double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
+    approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+    #elif REMOTE_INSERTS || USE_MPSC
+    double approximate_freq = localThreadData->sketchArray[key % numberOfThreads]->Query_Sketch(key);
+    #elif LOCAL_COPIES
+    double approximate_freq = 0;
+    for (int j=0; j<numberOfThreads; j++){
+        approximate_freq += localThreadData->sketchArray[j]->Query_Sketch(key);
+    }
+    #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
+    double approximate_freq = 0;
+    for (int j=0; j<numberOfThreads; j++){
+        unsigned int countInFilter = queryFilter(key, &(localThreadData->Filter));
+        if (countInFilter){
+            approximate_freq += countInFilter;
+        }
+        else{
+            approximate_freq += localThreadData->sketchArray[j]->Query_Sketch(key);
+        }
+    }
+    #elif SHARED_SKETCH
+    double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
+    #elif DELEGATION_FILTERS
+    double approximate_freq = delegateQuery(localThreadData, key);
+    #else 
+        #error "Preprocessor flags not properly set"
+    #endif
+    #if USE_FILTER
+    approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+    #endif
+
+    return approximate_freq;
+}
+
+
+
 
 void insert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
 #if USE_MPSC
@@ -112,7 +157,7 @@ void insert(threadDataStruct * localThreadData, unsigned int key, unsigned int i
     localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, increment);
 #elif HYBRID
     localThreadData->theSketch->Update_Sketch_Hybrid(key, 1.0, HYBRID);
-#elif LOCAL_COPIES || AUGMENTED_SKETCH
+#elif LOCAL_COPIES || AUGMENTED_SKETCH || DELEGATION_FILTERS
     localThreadData->theSketch->Update_Sketch(key, double(increment));
 #elif SHARED_SKETCH
     localThreadData->theGlobalSketch->Update_Sketch_Atomics(key, increment);
@@ -166,9 +211,10 @@ void threadWork(threadDataStruct *localThreadData)
     }
     #if (!DURATION && DELEGATION_FILTERS) 
     // keep clearing your backlog, other wise we might endup in a deadlock
+    serveDelegatedInsertsAndQueries(localThreadData); 
     __sync_fetch_and_add( &threadsFinished, 1);
     while( threadsFinished < numberOfThreads){
-        serveDelegatedInserts(localThreadData); 
+        serveDelegatedInsertsAndQueries(localThreadData); 
     }
     #endif
     localThreadData->numQueries = numQueries;
@@ -200,6 +246,13 @@ void * threadEntryPoint(void * threadArgs){
         localThreadData->Filter.filter_old_count[i] = 0;
     }
     localThreadData->Filter.filterCount = 0;
+
+    localThreadData->pendingQueriesKeys =  (int *)calloc(numberOfThreads, sizeof(int));
+    localThreadData->pendingQueriesCounts =  (unsigned int *)calloc(numberOfThreads, sizeof(unsigned int));
+    localThreadData->pendingQueriesFlags =  (volatile int *)calloc(numberOfThreads, sizeof(volatile int));
+    for(int i=0; i<numberOfThreads; i++){
+        localThreadData->pendingQueriesKeys[i] = -1;
+    }
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);
@@ -340,7 +393,7 @@ int main(int argc, char **argv)
             #if HYBRID
             double approximate_freq = globalSketch->Query_Sketch(i);
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-            #elif REMOTE_INSERTS || USE_MPSC || DELEGATION_FILTERS
+            #elif REMOTE_INSERTS || USE_MPSC 
             double approximate_freq = cmArray[i % numberOfThreads]->Query_Sketch(i);
             #elif LOCAL_COPIES
             double approximate_freq = 0;
@@ -360,6 +413,19 @@ int main(int argc, char **argv)
             }
             #elif SHARED_SKETCH
             double approximate_freq = globalSketch->Query_Sketch(i);
+            #elif DELEGATION_FILTERS
+            double approximate_freq = 0;
+            int owner = i % numberOfThreads;
+            unsigned int countInFilter = queryFilter(i, &(threadData[owner].Filter));
+            if (countInFilter){
+                approximate_freq += countInFilter;
+            }
+            else{
+                approximate_freq += cmArray[owner]->Query_Sketch(i);
+            }
+            for (int j =0; j < numberOfThreads; j++){
+                approximate_freq+= queryFilter(i, &(filterMatrix[j * numberOfThreads + owner]));
+            }
             #endif
             #if USE_FILTER
                 approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
