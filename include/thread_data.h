@@ -33,6 +33,14 @@ typedef struct
     int * pendingQueriesKeys; // need volatiles?
     unsigned int * pendingQueriesCounts;
     volatile int * pendingQueriesFlags;
+    struct{
+        volatile int insertsPending;
+        char pad1[60];
+    };
+    struct{
+        volatile int queriesPending;
+        char pad2[60];
+    };
     int numQueries;
     int numInserts;
     Count_Min_Sketch ** sketchArray;

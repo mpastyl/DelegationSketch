@@ -39,6 +39,7 @@ int shouldQuery(int index, int tid){
 
 void serveDelegatedInserts(threadDataStruct * localThreadData){
     // Check if needed?
+    if (!localThreadData->insertsPending) return;
     for (int thread=0; thread<numberOfThreads; thread++){
         // if Filter is full
         FilterStruct * filter  = &(filterMatrix[thread * numberOfThreads + localThreadData->tid]);
@@ -56,9 +57,11 @@ void serveDelegatedInserts(threadDataStruct * localThreadData){
             filter->filterCount = 0;
         }
     }
+    localThreadData->insertsPending = 0;
 }
 
 void serveDelegatedQueries(threadDataStruct *localThreadData){
+    if (!localThreadData->queriesPending) return;
     for (int i=0; i<numberOfThreads; i++){
         if (localThreadData->pendingQueriesFlags[i]){
             unsigned int countInFilter = queryFilter(localThreadData->pendingQueriesKeys[i], &(localThreadData->Filter));
@@ -75,6 +78,7 @@ void serveDelegatedQueries(threadDataStruct *localThreadData){
             localThreadData->pendingQueriesFlags[i] = 0;
         }
     }
+    localThreadData->queriesPending = 0;
 }
 
 void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
@@ -86,8 +90,10 @@ void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsign
     int owner = key % numberOfThreads;
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
+    if (!threadData[owner].insertsPending) threadData[owner].insertsPending = 1;
     while((!tryInsertInDelegatingFilter(filter, key)) && startBenchmark){   // I might deadlock if i am waiting for a thread that finished the benchmark
         //If it is full? Maybe try to serve your own pending requests and try again?
+        if (!threadData[owner].insertsPending) threadData[owner].insertsPending = 1;
         serveDelegatedInsertsAndQueries(localThreadData);
     }
 }
@@ -102,7 +108,10 @@ unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key)
     threadData[owner].pendingQueriesCounts[localThreadData->tid] = 0;
     threadData[owner].pendingQueriesFlags[localThreadData->tid] = 1;
 
+    if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
+
     while (threadData[owner].pendingQueriesFlags[localThreadData->tid] && startBenchmark){
+        if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
         serveDelegatedInsertsAndQueries(localThreadData);
     }
     return threadData[owner].pendingQueriesCounts[localThreadData->tid];
@@ -253,6 +262,9 @@ void * threadEntryPoint(void * threadArgs){
     for(int i=0; i<numberOfThreads; i++){
         localThreadData->pendingQueriesKeys[i] = -1;
     }
+
+    localThreadData->insertsPending = 0;
+    localThreadData->queriesPending = 0;
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);
