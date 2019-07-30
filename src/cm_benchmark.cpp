@@ -276,7 +276,7 @@ void * threadEntryPoint(void * threadArgs){
 
 void postProcessing(){
 
-    long int sumNumQueries, sumNumInserts = 0;
+    long int sumNumQueries=0, sumNumInserts = 0;
     double sumReturnValues = 0;
     for (int i=0; i<numberOfThreads; i++){
         sumNumQueries += threadData[i].numQueries;
