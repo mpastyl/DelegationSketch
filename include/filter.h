@@ -142,7 +142,7 @@ void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int ke
 }
 
 int tryInsertInDelegatingFilter(FilterStruct * filter, unsigned int key){
-    if (filter->filterCount == FILTER_SIZE) return 0;
+    if (filter->filterFull) return 0;
 
     int qRes = queryFilterIndex(key,filter->filter_id);
     if (qRes == -1){
@@ -151,6 +151,9 @@ int tryInsertInDelegatingFilter(FilterStruct * filter, unsigned int key){
             filter->filter_id[filter->filterCount] = key;
             filter->filter_count[filter->filterCount] = 1;
             filter->filterCount++;
+        }
+        if (filter->filterCount == FILTER_SIZE){
+            filter->filterFull = 1;
         }
     }
     else{

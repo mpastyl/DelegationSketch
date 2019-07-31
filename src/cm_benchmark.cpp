@@ -43,7 +43,7 @@ void serveDelegatedInserts(threadDataStruct * localThreadData){
     for (int thread=0; thread<numberOfThreads; thread++){
         // if Filter is full
         FilterStruct * filter  = &(filterMatrix[thread * numberOfThreads + localThreadData->tid]);
-        if (filter->filterCount == FILTER_SIZE){
+        if (filter->filterFull){
             // parse it and add each element to your own filter
             for (int i=0; i<FILTER_SIZE;i++){
                 int key = filter->filter_id[i];
@@ -51,10 +51,11 @@ void serveDelegatedInserts(threadDataStruct * localThreadData){
                 insertFilterNoWriteBack(localThreadData, key, count);
                 // flush each element
                 filter->filter_id[i] = -1;
-                filter->filter_count[0] = 0;
+                filter->filter_count[i] = 0;
             }
             // mark it as empty
             filter->filterCount = 0;
+            filter->filterFull = 0;
         }
     }
     localThreadData->insertsPending = 0;
@@ -90,7 +91,6 @@ void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsign
     int owner = key % numberOfThreads;
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
-    if (!threadData[owner].insertsPending) threadData[owner].insertsPending = 1;
     while((!tryInsertInDelegatingFilter(filter, key)) && startBenchmark){   // I might deadlock if i am waiting for a thread that finished the benchmark
         //If it is full? Maybe try to serve your own pending requests and try again?
         if (!threadData[owner].insertsPending) threadData[owner].insertsPending = 1;
@@ -109,7 +109,6 @@ unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key)
     threadData[owner].pendingQueriesFlags[localThreadData->tid] = 1;
 
     if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
-
     while (threadData[owner].pendingQueriesFlags[localThreadData->tid] && startBenchmark){
         if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
         serveDelegatedInsertsAndQueries(localThreadData);

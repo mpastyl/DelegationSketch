@@ -12,10 +12,12 @@
 
 typedef struct{
     alignas(32) int filter_id[FILTER_SIZE];
-    unsigned int filter_count[FILTER_SIZE];
+    volatile unsigned int filter_count[FILTER_SIZE];
     unsigned int filter_old_count[FILTER_SIZE];
-    int filterCount;
+    volatile int filterCount;
     char padding[64]; // Need to figure out why it breaks for some sizes
+    volatile int filterFull; 
+    char padding2[64-4]; // Need to figure out why it breaks for some sizes
 }FilterStruct;
 
 typedef struct
