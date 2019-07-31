@@ -7,10 +7,10 @@
 
 #define MAX_FILTER_SLACK 5
 
-void printFilter(FilterStruct filter){
+void printFilter(FilterStruct * filter){
     int i=0;
     for (i=0;i<FILTER_SIZE;i++){
-        printf("%d ", filter.filter_count[i]);
+        printf("%d ", filter->filter_count[i]);
     }
     printf("\n");
 }
@@ -154,6 +154,29 @@ int tryInsertInDelegatingFilter(FilterStruct * filter, unsigned int key){
         }
         if (filter->filterCount == FILTER_SIZE){
             filter->filterFull = 1;
+        }
+    }
+    else{
+        filter->filter_count[qRes]++;
+    }
+    return 1;
+}
+
+
+int tryInsertInDelegatingFilterWithList(FilterStruct * filter, unsigned int key, threadDataStruct * owningThread){
+    if (filter->filterCount == FILTER_SIZE) return 0;
+
+    int qRes = queryFilterIndex(key,filter->filter_id);
+    if (qRes == -1){
+        // not in the filter but filter has space
+        if (filter->filterCount < FILTER_SIZE){
+            filter->filter_id[filter->filterCount] = key;
+            filter->filter_count[filter->filterCount] = 1;
+            filter->filterCount++;
+        }
+        //If i just fillled the filter, push into the queue of the owner
+        if (filter->filterCount == FILTER_SIZE){
+            push(filter, &(owningThread->listOfFullFilters));
         }
     }
     else{

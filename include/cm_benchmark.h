@@ -36,6 +36,10 @@
 #define DELEGATION_FILTERS 0
 #endif
 
+#ifndef USE_LIST_OF_FILTERS
+#define USE_LIST_OF_FILTERS 0
+#endif
+
 #ifndef ITHACA
 #define ITHACA 0
 #endif

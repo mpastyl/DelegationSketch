@@ -38,6 +38,27 @@ int shouldQuery(int index, int tid){
 }
 
 void serveDelegatedInserts(threadDataStruct * localThreadData){
+    #if USE_LIST_OF_FILTERS
+    // Check if needed?
+    //if (!localThreadData->insertsPending) return;
+    //printf("Filter List Head points to %p\n",localThreadData->listOfFullFilters);
+    if (!localThreadData->listOfFullFilters) return;
+    while (localThreadData->listOfFullFilters){
+        FilterStruct* filter = pop(&(localThreadData->listOfFullFilters));
+        // parse it and add each element to your own filter
+        for (int i=0; i<FILTER_SIZE;i++){
+            int key = filter->filter_id[i];
+            unsigned int count = filter->filter_count[i];
+            insertFilterNoWriteBack(localThreadData, key, count);
+            // flush each element
+            filter->filter_id[i] = -1;
+            filter->filter_count[i] = 0;
+        }
+        // mark it as empty
+        filter->filterCount = 0;
+    }
+
+    #else
     // Check if needed?
     if (!localThreadData->insertsPending) return;
     for (int thread=0; thread<numberOfThreads; thread++){
@@ -59,6 +80,7 @@ void serveDelegatedInserts(threadDataStruct * localThreadData){
         }
     }
     localThreadData->insertsPending = 0;
+    #endif
 }
 
 void serveDelegatedQueries(threadDataStruct *localThreadData){
@@ -90,12 +112,21 @@ void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
 void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
     int owner = key % numberOfThreads;
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
+    threadDataStruct * owningThread = &(threadData[owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
+    #if USE_LIST_OF_FILTERS
+    while((!tryInsertInDelegatingFilterWithList(filter, key, owningThread)) && startBenchmark){   // I might deadlock if i am waiting for a thread that finished the benchmark
+        //If it is full? Maybe try to serve your own pending requests and try again?
+        //if (!threadData[owner].insertsPending) threadData[owner].insertsPending = 1;
+        serveDelegatedInsertsAndQueries(localThreadData);
+    }
+    #else
     while((!tryInsertInDelegatingFilter(filter, key)) && startBenchmark){   // I might deadlock if i am waiting for a thread that finished the benchmark
         //If it is full? Maybe try to serve your own pending requests and try again?
         if (!threadData[owner].insertsPending) threadData[owner].insertsPending = 1;
         serveDelegatedInsertsAndQueries(localThreadData);
     }
+    #endif
 }
 
 unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key){
@@ -264,6 +295,7 @@ void * threadEntryPoint(void * threadArgs){
 
     localThreadData->insertsPending = 0;
     localThreadData->queriesPending = 0;
+    localThreadData->listOfFullFilters = NULL;
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);

@@ -4,7 +4,7 @@ CPPDEBUG = g++ -O2 -Wno-deprecated -g
 DEPS = thread_data.h thread_utils.h cm_benchmark.h barrier.h data_generator.h gen_scheme.h range_sum.h relation.h RM7_range_sum.h sampling.h sketches.h utils.h xis.h
 BIN = ../bin
 
-all: cm_shared.out cm_local_copies.out cm_hybrid.out cm_remote_inserts.out cm_remote_inserts_mpsc.out cm_remote_inserts_filtered.out cm_shared_filtered.out cm_local_copies_filtered.out cm_augmented_sketch.out cm_delegation_filters.out
+all: cm_shared.out cm_local_copies.out cm_hybrid.out cm_remote_inserts.out cm_remote_inserts_mpsc.out cm_remote_inserts_filtered.out cm_shared_filtered.out cm_local_copies_filtered.out cm_augmented_sketch.out cm_delegation_filters.out cm_delegation_filters_with_linked_list.out
 
 
 sketch_sampling:  relation.o xis.o sketches.o sampling.o sketch_sampling.o
@@ -68,6 +68,9 @@ cm_augmented_sketch.o: cm_benchmark.cpp
 
 cm_delegation_filters.o: cm_benchmark.cpp 
 	$(CPP) -c cm_benchmark.cpp -D DELEGATION_FILTERS=1
+
+cm_delegation_filters_with_linked_list.o: cm_benchmark.cpp 
+	$(CPP) -c cm_benchmark.cpp -D DELEGATION_FILTERS=1 -D USE_LIST_OF_FILTERS=1
 #--------------------
 cm_shared.out:  relation.o xis.o sketches.o cm_shared.o
 	$(CPP) -o ${BIN}/$@ relation.o xis.o sketches.o cm_benchmark.o 
@@ -98,6 +101,9 @@ cm_augmented_sketch.out:  relation.o xis.o sketches.o cm_augmented_sketch.o
 	$(CPP) -o ${BIN}/$@ relation.o xis.o sketches.o cm_benchmark.o 
 
 cm_delegation_filters.out:  relation.o xis.o sketches.o cm_delegation_filters.o
+	$(CPP) -o ${BIN}/$@ relation.o xis.o sketches.o cm_benchmark.o 
+
+cm_delegation_filters_with_linked_list.out:  relation.o xis.o sketches.o cm_delegation_filters_with_linked_list.o
 	$(CPP) -o ${BIN}/$@ relation.o xis.o sketches.o cm_benchmark.o 
 
 clean:

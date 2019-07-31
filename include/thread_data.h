@@ -10,15 +10,36 @@
 
 #define FILTER_SIZE 16
 
-typedef struct{
+typedef struct Filter_T{
     alignas(32) int filter_id[FILTER_SIZE];
     volatile unsigned int filter_count[FILTER_SIZE];
     unsigned int filter_old_count[FILTER_SIZE];
     volatile int filterCount;
-    char padding[64]; // Need to figure out why it breaks for some sizes
+    Filter_T * volatile next;
+    char padding[64-4]; // Need to figure out why it breaks for some sizes
     volatile int filterFull; 
     char padding2[64-4]; // Need to figure out why it breaks for some sizes
 }FilterStruct;
+
+void push(FilterStruct * filter, FilterStruct * volatile * headPointer){
+
+    FilterStruct * volatile oldHead = *headPointer;
+    filter->next = oldHead;
+    while(! __sync_bool_compare_and_swap (headPointer, oldHead, filter)){
+        oldHead = *headPointer;
+        filter->next = oldHead;
+    }
+}
+
+FilterStruct * pop(FilterStruct * volatile * headPointer){
+    FilterStruct * volatile oldHead = *headPointer;
+    FilterStruct * volatile newHead = oldHead->next;
+    while(! __sync_bool_compare_and_swap (headPointer, oldHead, newHead)){
+        oldHead = *headPointer;
+        newHead = oldHead->next;
+    }
+    return oldHead;
+}
 
 typedef struct
 {
@@ -32,6 +53,7 @@ typedef struct
     int endIndex;
     double returnData;
     FilterStruct Filter;
+    FilterStruct * volatile listOfFullFilters;
     int * pendingQueriesKeys; // need volatiles?
     unsigned int * pendingQueriesCounts;
     volatile int * pendingQueriesFlags;
