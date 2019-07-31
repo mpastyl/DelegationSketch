@@ -92,7 +92,7 @@ void insertFilterWithWriteBack(threadDataStruct * localThreadData, unsigned int 
             }
             //place the new element there
             filter->filter_id[minIndex] = key;
-            filter->filter_count[minIndex] = filter->filter_count[minIndex] - filter->filter_count[minIndex] % MAX_FILTER_SLACK;
+            filter->filter_count[minIndex] = filter->filter_count[minIndex] - filter->filter_count[minIndex] % MAX_FILTER_SLACK +1;
         }
     }
     else{ 
