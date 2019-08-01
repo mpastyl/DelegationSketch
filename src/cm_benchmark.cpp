@@ -367,6 +367,9 @@ int main(int argc, char **argv)
     Relation *r1 = new Relation(dom_size, tuples_no);
 
     r1->Generate_Data(DIST_TYPE, DIST_PARAM, DIST_SHUFF); //Note last arg should be 1
+    if (r1->tuples_no < tuples_no){ //Sometimes Generate_Data might generate less than tuples_no
+        tuples_no = r1->tuples_no;
+    }
     auto rng = default_random_engine {};
     shuffle(begin((*r1->tuples)), end((*r1->tuples)), rng);
 
