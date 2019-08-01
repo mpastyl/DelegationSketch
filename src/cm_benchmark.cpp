@@ -13,6 +13,8 @@
 #include <omp.h>
 #include <unistd.h>
 #include <x86intrin.h>
+#include <algorithm>
+#include <random>
 
 using namespace std;
 
@@ -365,6 +367,8 @@ int main(int argc, char **argv)
     Relation *r1 = new Relation(dom_size, tuples_no);
 
     r1->Generate_Data(DIST_TYPE, DIST_PARAM, DIST_SHUFF); //Note last arg should be 1
+    auto rng = default_random_engine {};
+    shuffle(begin((*r1->tuples)), end((*r1->tuples)), rng);
 
     for (j = 0; j < runs_no; j++)
     {
