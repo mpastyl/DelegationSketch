@@ -229,7 +229,7 @@ void threadWork(threadDataStruct *localThreadData)
             if (shouldQuery(i, localThreadData->tid) < QUERRY_RATE)
             {
                 numQueries++;
-                double approximate_freq = querry(localThreadData, i);
+                double approximate_freq = querry(localThreadData, (*localThreadData->theData->tuples)[i]);
                 localThreadData->returnData += approximate_freq;
             }
             numInserts++;
