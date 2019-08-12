@@ -1,6 +1,10 @@
 from matplotlib import pyplot as plt
 
-versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters"]
+from itertools import cycle
+lines = ["-","--","-.",":"]
+linecycler = cycle(lines)
+
+versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
 thread_list=[20]
@@ -56,9 +60,14 @@ for version in versions:
 
 plt.plot(totalHist[(versions[0],thread_list[0])], label = "True")
 for version in versions:
-    plt.plot(totalAnswers[(version,20)], label = version)
+    plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = version)
 plt.legend()
 plt.show()
+
+for version in versions:
+    for i in range(len(totalAnswers[(version,thread_list[0])])):
+        if totalAnswers[(version,thread_list[0])][i] < totalHist[(versions[0],thread_list[0])][i]:
+            print "Under estimation in ",i
 
 realValues = totalHist[(versions[0],thread_list[0])]
 for version in versions:

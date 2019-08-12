@@ -4,7 +4,7 @@ thread_list=`seq 1 28`
 buckets=512
 rows=32
 
-versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered cm_shared_filtered cm_local_copies_filtered cm_augmented_sketch cm_delegation_filters"
+versions="cm_shared cm_local_copies cm_hybrid cm_remote_inserts cm_remote_inserts_filtered cm_shared_filtered cm_local_copies_filtered cm_augmented_sketch cm_delegation_filters cm_delegation_filters_with_linked_list"
 
 cd src
 make clean
@@ -22,9 +22,9 @@ do
         do
             if [ "$version" != "cm_shared" ] && [ "$version" != "cm_shared_filtered" ]; then
             echo "Using $rows * " $(($buckets/$threads))
-                ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 1 1 $threads $queries 0 >/dev/null
+                ./bin/$version.out 10000 60000 $(($buckets/$threads)) $rows 1 1 0 1 $threads $queries 0 >/dev/null
             else
-                ./bin/$version.out 10000 60000 $buckets $rows 1 1 1 1 $threads $queries 0 >/dev/null
+                ./bin/$version.out 10000 60000 $buckets $rows 1 1 0 1 $threads $queries 0 >/dev/null
             fi
             cp logs/count_min_results.txt logs/${version}_${threads}_accuracy.log
         done
