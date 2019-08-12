@@ -89,18 +89,27 @@ void serveDelegatedQueries(threadDataStruct *localThreadData){
     if (!localThreadData->queriesPending) return;
     for (int i=0; i<numberOfThreads; i++){
         if (localThreadData->pendingQueriesFlags[i]){
-            unsigned int countInFilter = queryFilter(localThreadData->pendingQueriesKeys[i], &(localThreadData->Filter));
+            int key = localThreadData->pendingQueriesKeys[i];
+            unsigned int countInFilter = queryFilter(key, &(localThreadData->Filter));
+            unsigned int queryResult = 0;
             if (countInFilter){
-                localThreadData->pendingQueriesCounts[i] = countInFilter;
+                queryResult = countInFilter;
             }
             else{
-                localThreadData->pendingQueriesCounts[i] = localThreadData->theSketch->Query_Sketch(localThreadData->pendingQueriesKeys[i]);
+                queryResult = localThreadData->theSketch->Query_Sketch(key);
             }
             //Also check the delegation filters
             for (int j =0; j < numberOfThreads; j++){
-                localThreadData->pendingQueriesCounts[i] += queryFilter(localThreadData->pendingQueriesKeys[i], &(filterMatrix[j * numberOfThreads + localThreadData->tid]));
+                queryResult += queryFilter(key, &(filterMatrix[j * numberOfThreads + localThreadData->tid]));
             }
-            localThreadData->pendingQueriesFlags[i] = 0;
+
+            // Search all the pending queries to find queries with the same key that can be served
+            for (int j=0; j< numberOfThreads; j++){
+                if (localThreadData->pendingQueriesFlags[j] && (localThreadData->pendingQueriesKeys[j] == key)){
+                    localThreadData->pendingQueriesCounts[j] = queryResult;
+                    localThreadData->pendingQueriesFlags[j] = 0;
+                }
+            }
         }
     }
     localThreadData->queriesPending = 0;
