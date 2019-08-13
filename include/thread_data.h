@@ -6,6 +6,7 @@
 #include "barrier.h"
 #include "relation.h"
 #include "sketches.h"
+#include "libdivide.h"
 //#include "cm_benchmark.h"
 
 #define FILTER_SIZE 16
@@ -51,6 +52,7 @@ typedef struct
     struct timeval end;
     int startIndex;
     int endIndex;
+    struct libdivide::libdivide_s32_t * fastDivHandle;
     double returnData;
     FilterStruct Filter;
     FilterStruct * volatile listOfFullFilters;

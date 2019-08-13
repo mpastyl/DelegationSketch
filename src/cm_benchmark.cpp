@@ -120,8 +120,8 @@ void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
     serveDelegatedQueries(localThreadData);
 }
 
-void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
-    int owner = key % numberOfThreads;
+void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment, int owner){
+    //int owner = key % numberOfThreads;
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
     threadDataStruct * owningThread = &(threadData[owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
@@ -224,6 +224,8 @@ void threadWork(threadDataStruct *localThreadData)
     int numQueries = 0;
     i = start;
     int elementsProcessed = 0;
+    //struct libdivide::libdivide_s32_t fast_d = libdivide::libdivide_s32_gen((int32_t)numberOfThreads);
+    struct libdivide::libdivide_s32_t * fastDivHandle = localThreadData->fastDivHandle;
     while (!startBenchmark)
     {
     }
@@ -231,6 +233,7 @@ void threadWork(threadDataStruct *localThreadData)
     {
         for (i = start; i < end; i++)
         {
+            unsigned int key = (*localThreadData->theData->tuples)[i];
             if (!startBenchmark)
             {
                 break;
@@ -238,19 +241,20 @@ void threadWork(threadDataStruct *localThreadData)
             if (shouldQuery(i, localThreadData->tid) < QUERRY_RATE)
             {
                 numQueries++;
-                double approximate_freq = querry(localThreadData, (*localThreadData->theData->tuples)[i]);
+                double approximate_freq = querry(localThreadData, key);
                 localThreadData->returnData += approximate_freq;
             }
             numInserts++;
             #if DELEGATION_FILTERS
             serveDelegatedInserts(localThreadData);
-            delegateInsert(localThreadData, (*localThreadData->theData->tuples)[i], 1);
+            int owner =key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
+            delegateInsert(localThreadData, key, 1, owner);
             #elif AUGMENTED_SKETCH
-            insertFilterNoWriteBack(localThreadData,(*localThreadData->theData->tuples)[i], 1);
+            insertFilterNoWriteBack(localThreadData, key, 1);
             #elif USE_FILTER
-            insertFilterWithWriteBack(localThreadData,(*localThreadData->theData->tuples)[i]);
+            insertFilterWithWriteBack(localThreadData, key);
             #else
-            insert(localThreadData, (*localThreadData->theData->tuples)[i], 1);
+            insert(localThreadData, key, 1);
             #endif
             localThreadData->elementsProcessed++;
         }
@@ -308,6 +312,9 @@ void * threadEntryPoint(void * threadArgs){
     for(int i=0; i<numberOfThreads; i++){
         localThreadData->pendingQueriesKeys[i] = -1;
     }
+
+    struct libdivide::libdivide_s32_t fast_d = libdivide::libdivide_s32_gen((int32_t)numberOfThreads);
+    localThreadData->fastDivHandle = &fast_d;
 
     localThreadData->insertsPending = 0;
     localThreadData->queriesPending = 0;
