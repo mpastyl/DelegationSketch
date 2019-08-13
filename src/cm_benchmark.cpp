@@ -121,7 +121,6 @@ void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
 }
 
 void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment, int owner){
-    //int owner = key % numberOfThreads;
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
     threadDataStruct * owningThread = &(threadData[owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
@@ -141,7 +140,7 @@ void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsign
 }
 
 unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key){
-    int owner = key % numberOfThreads;
+    int owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, localThreadData->fastDivHandle);
     while (threadData[owner].pendingQueriesFlags[localThreadData->tid]  && startBenchmark){
         serveDelegatedInsertsAndQueries(localThreadData);
     }
@@ -247,7 +246,7 @@ void threadWork(threadDataStruct *localThreadData)
             numInserts++;
             #if DELEGATION_FILTERS
             serveDelegatedInserts(localThreadData);
-            int owner =key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
+            int owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
             delegateInsert(localThreadData, key, 1, owner);
             #elif AUGMENTED_SKETCH
             insertFilterNoWriteBack(localThreadData, key, 1);
