@@ -85,31 +85,36 @@ void serveDelegatedInserts(threadDataStruct * localThreadData){
     #endif
 }
 
+unsigned int queryAllRelatedDataStructuresAndUpdatePendigQueries(threadDataStruct * localThreadData, unsigned int key){
+    unsigned int countInFilter = queryFilter(key, &(localThreadData->Filter));
+    unsigned int queryResult = 0;
+    if (countInFilter){
+        queryResult = countInFilter;
+    }
+    else{
+        queryResult = localThreadData->theSketch->Query_Sketch(key);
+    }
+    //Also check the delegation filters
+    for (int j =0; j < numberOfThreads; j++){
+        queryResult += queryFilter(key, &(filterMatrix[j * numberOfThreads + localThreadData->tid]));
+    }
+    
+    // Search all the pending queries to find queries with the same key that can be served
+    for (int j=0; j< numberOfThreads; j++){
+        if (localThreadData->pendingQueriesFlags[j] && (localThreadData->pendingQueriesKeys[j] == key)){
+            localThreadData->pendingQueriesCounts[j] = queryResult;
+            localThreadData->pendingQueriesFlags[j] = 0;
+        }
+    }
+    return queryResult;
+}
+
 void serveDelegatedQueries(threadDataStruct *localThreadData){
     if (!localThreadData->queriesPending) return;
     for (int i=0; i<numberOfThreads; i++){
         if (localThreadData->pendingQueriesFlags[i]){
             int key = localThreadData->pendingQueriesKeys[i];
-            unsigned int countInFilter = queryFilter(key, &(localThreadData->Filter));
-            unsigned int queryResult = 0;
-            if (countInFilter){
-                queryResult = countInFilter;
-            }
-            else{
-                queryResult = localThreadData->theSketch->Query_Sketch(key);
-            }
-            //Also check the delegation filters
-            for (int j =0; j < numberOfThreads; j++){
-                queryResult += queryFilter(key, &(filterMatrix[j * numberOfThreads + localThreadData->tid]));
-            }
-
-            // Search all the pending queries to find queries with the same key that can be served
-            for (int j=0; j< numberOfThreads; j++){
-                if (localThreadData->pendingQueriesFlags[j] && (localThreadData->pendingQueriesKeys[j] == key)){
-                    localThreadData->pendingQueriesCounts[j] = queryResult;
-                    localThreadData->pendingQueriesFlags[j] = 0;
-                }
-            }
+            unsigned int ret = queryAllRelatedDataStructuresAndUpdatePendigQueries(localThreadData, key);
         }
     }
     localThreadData->queriesPending = 0;
@@ -121,6 +126,10 @@ void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
 }
 
 void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment, int owner){
+    if (owner == localThreadData->tid){
+        insertFilterNoWriteBack(localThreadData, key, increment); 
+        return;
+    }
     FilterStruct * filter = &(filterMatrix[localThreadData->tid * numberOfThreads + owner]);
     threadDataStruct * owningThread = &(threadData[owner]);
     //try to insert in filterMatrix[localThreadData->tid * numberofThreads + owner]
@@ -141,6 +150,11 @@ void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsign
 
 unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key){
     int owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, localThreadData->fastDivHandle);
+
+    if (owner == localThreadData->tid){
+        unsigned int ret = queryAllRelatedDataStructuresAndUpdatePendigQueries(localThreadData, key);
+        return ret;
+    }
     while (threadData[owner].pendingQueriesFlags[localThreadData->tid]  && startBenchmark){
         serveDelegatedInsertsAndQueries(localThreadData);
     }
