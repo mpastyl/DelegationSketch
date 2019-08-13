@@ -289,6 +289,11 @@ void * threadEntryPoint(void * threadArgs){
     int threadWorkSize = tuples_no /  numberOfThreads;
     localThreadData->startIndex = tid * threadWorkSize;
     localThreadData->endIndex =  localThreadData->startIndex + threadWorkSize; //Stop before you reach that index
+    //The last thread gets the rest if tuples_no is not devisible by numberOfThreads
+    //(it only matters for accuracy tests)
+    if (tid == (numberOfThreads - 1)){
+        localThreadData->endIndex = tuples_no;
+    }
 
     for (int i=0; i<FILTER_SIZE; i++){
         localThreadData->Filter.filter_id[i] = -1;
