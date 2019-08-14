@@ -5,8 +5,8 @@ from itertools import cycle
 lines = ["-","--","-.",":"]
 linecycler = cycle(lines)
 
-threads = range(1,29,2)
-query_rates = [0,2,4]
+threads = range(1,73,4)
+query_rates = [0,1,2,3]
 versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"] 
 
 def read_perf(filename):
@@ -45,8 +45,8 @@ for queries in query_rates:
 #plt.ylabel("Mops/sec")
 plt.show()
 
-query_rates = [0,2,4,6]
-threads="20"
+query_rates = [0,1,2,3,4,5,6]
+threads="72"
 QueriesData = {}
 for version in versions:
     QueriesData[version] = read_perf("logs/cm_"+version+"_"+threads+"_threads.log")
@@ -58,16 +58,19 @@ plt.xlabel("Query rate (%)")
 plt.ylabel("Mops/sec")
 plt.show()
 
-skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.75 2 2.25 2.5 2.75 3 3.5 4"
-skew_rates = [x for x in skew_rates_raw_list.split()]
-threads="28"
+skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
+skew_rates = [float(x) for x in skew_rates_raw_list.split()]
+threads="72"
 SkewnesData = {}
+query_rates = [0,1,2,3]
 for version in versions:
-    SkewnesData[version] = read_perf("logs/skew_cm_"+version+"_"+threads+"_threads.log")
+	for query in query_rates:
+            SkewnesData[(version, query)] = read_perf("logs/skew_cm_"+version+"_"+threads+"_threads_"+str(query)+"_queries.log")
 
-for version in versions:
-    plt.plot(skew_rates,SkewnesData[version], next(linecycler), label = version)
-plt.legend()
-plt.xlabel("Skew parameter")
-plt.ylabel("Mops/sec")
-plt.show()
+for query in query_rates:
+    for version in versions:
+        plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = version)
+    plt.legend()
+    plt.xlabel("Skew parameter")
+    plt.ylabel("Mops/sec at "+str(query)+"% query rate")
+    plt.show()

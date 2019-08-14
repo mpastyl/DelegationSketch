@@ -4,7 +4,8 @@ from itertools import cycle
 lines = ["-","--","-.",":"]
 linecycler = cycle(lines)
 
-versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
+#versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
+versions = ["augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
 thread_list=[20]
@@ -43,7 +44,7 @@ for version in versions:
         with open(filename) as fp:
             for line in fp:
                 index = int(line.split()[0])
-                trueValue = int(line.split()[1])
+                trueValue = int(line.split()[2])
                 approximation =  float(line.split()[2])
 
                 indexes.append(index)
@@ -69,20 +70,20 @@ for version in versions:
         if totalAnswers[(version,thread_list[0])][i] < totalHist[(versions[0],thread_list[0])][i]:
             print "Under estimation in ",i
 
-realValues = totalHist[(versions[0],thread_list[0])]
-for version in versions:
-    ARE = [computeARE(realValues, totalAnswers[(version,threads)]) for threads in thread_list]
-    plt.plot(ARE, label = version)
-plt.xlabel("Threads")
-plt.ylabel("Average Relative Error")
-plt.legend(loc=2)
-plt.show()
+# realValues = totalHist[(versions[0],thread_list[0])]
+# for version in versions:
+#     ARE = [computeARE(realValues, totalAnswers[(version,threads)]) for threads in thread_list]
+#     plt.plot(ARE, label = version)
+# plt.xlabel("Threads")
+# plt.ylabel("Average Relative Error")
+# plt.legend(loc=2)
+# plt.show()
 
-realValues = totalHist[(versions[0],thread_list[0])]
-for version in versions:
-    ObservedError = [computeObservedError(realValues, totalAnswers[(version,threads)]) for threads in thread_list]
-    plt.plot(ObservedError, label = version)
-plt.xlabel("Threads")
-plt.ylabel("Observed Error")
-plt.legend(loc=2)
-plt.show()
+# realValues = totalHist[(versions[0],thread_list[0])]
+# for version in versions:
+#     ObservedError = [computeObservedError(realValues, totalAnswers[(version,threads)]) for threads in thread_list]
+#     plt.plot(ObservedError, label = version)
+# plt.xlabel("Threads")
+# plt.ylabel("Observed Error")
+# plt.legend(loc=2)
+# plt.show()

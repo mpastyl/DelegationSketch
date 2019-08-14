@@ -185,7 +185,7 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
     double approximate_freq = 0;
     for (int j=0; j<numberOfThreads; j++){
-        unsigned int countInFilter = queryFilter(key, &(localThreadData->Filter));
+        unsigned int countInFilter = queryFilter(key, &(threadData[j].Filter));
         if (countInFilter){
             approximate_freq += countInFilter;
         }
