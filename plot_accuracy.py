@@ -44,7 +44,7 @@ for version in versions:
         with open(filename) as fp:
             for line in fp:
                 index = int(line.split()[0])
-                trueValue = int(line.split()[2])
+                trueValue = int(line.split()[1])
                 approximation =  float(line.split()[2])
 
                 indexes.append(index)
