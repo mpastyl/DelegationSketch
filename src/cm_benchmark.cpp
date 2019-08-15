@@ -22,6 +22,12 @@ FilterStruct * filterMatrix;
 
 int tuples_no;
 
+unsigned short precomputedMods[512];
+
+static inline int findOwner(unsigned int key){
+    return precomputedMods[key & 511];
+}
+
 #if (!DURATION && DELEGATION_FILTERS) 
 volatile int threadsFinished = 0;
 #endif
@@ -149,7 +155,7 @@ void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsign
 }
 
 unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key){
-    int owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, localThreadData->fastDivHandle);
+    int owner = findOwner(key);
 
     if (owner == localThreadData->tid){
         unsigned int ret = queryAllRelatedDataStructuresAndUpdatePendigQueries(localThreadData, key);
@@ -176,7 +182,7 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
     double approximate_freq = localThreadData->theGlobalSketch->Query_Sketch(key);
     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
     #elif REMOTE_INSERTS || USE_MPSC
-    double approximate_freq = localThreadData->sketchArray[key % numberOfThreads]->Query_Sketch(key);
+    double approximate_freq = localThreadData->sketchArray[findOwner(key)]->Query_Sketch(key);
     #elif LOCAL_COPIES
     double approximate_freq = 0;
     for (int j=0; j<numberOfThreads; j++){
@@ -212,11 +218,11 @@ double querry(threadDataStruct * localThreadData, unsigned int key){
 
 void insert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
 #if USE_MPSC
-    int owner = key % numberOfThreads; 
+    int owner = findOwner(key); 
     localThreadData->sketchArray[owner]->enqueueRequest(key);
     localThreadData->theSketch->serveAllRequests(); //Serve any requests you can find in your own queue
 #elif REMOTE_INSERTS
-    int owner = key % numberOfThreads;
+    int owner = findOwner(key);
     localThreadData->sketchArray[owner]->Update_Sketch_Atomics(key, increment);
 #elif HYBRID
     localThreadData->theSketch->Update_Sketch_Hybrid(key, 1.0, HYBRID);
@@ -260,7 +266,8 @@ void threadWork(threadDataStruct *localThreadData)
             numInserts++;
             #if DELEGATION_FILTERS
             serveDelegatedInserts(localThreadData);
-            int owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
+            //int old_owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
+            int owner = findOwner(key);
             delegateInsert(localThreadData, key, 1, owner);
             #elif AUGMENTED_SKETCH
             insertFilterNoWriteBack(localThreadData, key, 1);
@@ -408,6 +415,13 @@ int main(int argc, char **argv)
     auto rng = default_random_engine {};
     shuffle(begin((*r1->tuples)), end((*r1->tuples)), rng);
 
+    int c = 0;
+    for (i=0; i<512; i++){
+        precomputedMods[i] = c;
+        c++;
+        c = c % numberOfThreads;
+    }  
+
     for (j = 0; j < runs_no; j++)
     {
         unsigned int I1, I2;
@@ -479,7 +493,7 @@ int main(int argc, char **argv)
             double approximate_freq = globalSketch->Query_Sketch(i);
             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
             #elif REMOTE_INSERTS || USE_MPSC 
-            double approximate_freq = cmArray[i % numberOfThreads]->Query_Sketch(i);
+            double approximate_freq = cmArray[findOwner(i)]->Query_Sketch(i);
             #elif LOCAL_COPIES
             double approximate_freq = 0;
             for (int j=0; j<numberOfThreads; j++){
@@ -500,7 +514,7 @@ int main(int argc, char **argv)
             double approximate_freq = globalSketch->Query_Sketch(i);
             #elif DELEGATION_FILTERS
             double approximate_freq = 0;
-            int owner = i % numberOfThreads;
+            int owner = findOwner(i);
             unsigned int countInFilter = queryFilter(i, &(threadData[owner].Filter));
             if (countInFilter){
                 approximate_freq += countInFilter;
