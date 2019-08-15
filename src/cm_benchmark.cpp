@@ -422,7 +422,7 @@ int main(int argc, char **argv)
         c = c % numberOfThreads;
     }  
 
-    for (j = 0; j < runs_no; j++)
+    for (int jj = 0; jj < runs_no; jj++)
     {
         unsigned int I1, I2;
 
