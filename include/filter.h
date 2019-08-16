@@ -38,7 +38,7 @@ int queryFilterIndexScalar(unsigned int key, int * filterIndexes){
 }
 //Checks if key is in the filter.
 //Return: the index if key is in the filter, otherwise -1
-int queryFilterIndex(unsigned int key, int * filterIndexes){
+static inline int queryFilterIndex(unsigned int key, int * filterIndexes){
     const __m128i s_item = _mm_set1_epi32(key);
     __m128i *filter = (__m128i *)filterIndexes;
     
@@ -105,7 +105,7 @@ void insertFilterWithWriteBack(threadDataStruct * localThreadData, unsigned int 
 }
 
 //NOTE: only works with the local copies version
-void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
+static inline void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int key, unsigned int increment){
 
     FilterStruct * filter = &(localThreadData->Filter);
     int qRes = queryFilterIndex(key,filter->filter_id);
@@ -141,7 +141,7 @@ void insertFilterNoWriteBack(threadDataStruct * localThreadData, unsigned int ke
     }
 }
 
-int tryInsertInDelegatingFilter(FilterStruct * filter, unsigned int key){
+static inline int tryInsertInDelegatingFilter(FilterStruct * filter, unsigned int key){
     if (filter->filterFull) return 0;
 
     int qRes = queryFilterIndex(key,filter->filter_id);
@@ -163,7 +163,7 @@ int tryInsertInDelegatingFilter(FilterStruct * filter, unsigned int key){
 }
 
 
-int tryInsertInDelegatingFilterWithList(FilterStruct * filter, unsigned int key, threadDataStruct * owningThread){
+static inline int tryInsertInDelegatingFilterWithList(FilterStruct * filter, unsigned int key, threadDataStruct * owningThread){
     if (filter->filterCount == FILTER_SIZE) return 0;
 
     int qRes = queryFilterIndex(key,filter->filter_id);

@@ -42,7 +42,7 @@ unsigned int Random_Generate()
 
 
 int shouldQuery(int index, int tid){
-    return (index + tid)% 100; //NOTE: not random enough?
+    return (index )% 1000; //NOTE: not random enough?
 }
 
 void serveDelegatedInserts(threadDataStruct * localThreadData){
@@ -131,7 +131,7 @@ void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
     serveDelegatedQueries(localThreadData);
 }
 
-void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment, int owner){
+static inline void delegateInsert(threadDataStruct * localThreadData, unsigned int key, unsigned int increment, int owner){
     if (owner == localThreadData->tid){
         insertFilterNoWriteBack(localThreadData, key, increment); 
         return;
@@ -257,9 +257,10 @@ void threadWork(threadDataStruct *localThreadData)
             {
                 break;
             }
-            if (shouldQuery(i, localThreadData->tid) < QUERRY_RATE)
+            if (shouldQuery(localThreadData->elementsProcessed, localThreadData->tid) < QUERRY_RATE)
             {
                 numQueries++;
+                serveDelegatedQueries(localThreadData);
                 double approximate_freq = querry(localThreadData, key);
                 localThreadData->returnData += approximate_freq;
             }
