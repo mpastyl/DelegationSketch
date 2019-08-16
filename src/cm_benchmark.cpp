@@ -116,14 +116,14 @@ unsigned int queryAllRelatedDataStructuresAndUpdatePendigQueries(threadDataStruc
 }
 
 void serveDelegatedQueries(threadDataStruct *localThreadData){
-    if (!localThreadData->queriesPending) return;
+    //if (!localThreadData->queriesPending) return;
     for (int i=0; i<numberOfThreads; i++){
         if (localThreadData->pendingQueriesFlags[i]){
             int key = localThreadData->pendingQueriesKeys[i];
             unsigned int ret = queryAllRelatedDataStructuresAndUpdatePendigQueries(localThreadData, key);
         }
     }
-    localThreadData->queriesPending = 0;
+    //localThreadData->queriesPending = 0;
 }
 
 void serveDelegatedInsertsAndQueries(threadDataStruct *localThreadData){
@@ -161,17 +161,17 @@ unsigned int delegateQuery(threadDataStruct * localThreadData, unsigned int key)
         unsigned int ret = queryAllRelatedDataStructuresAndUpdatePendigQueries(localThreadData, key);
         return ret;
     }
-    while (threadData[owner].pendingQueriesFlags[localThreadData->tid]  && startBenchmark){
-        serveDelegatedInsertsAndQueries(localThreadData);
-    }
+    //while (threadData[owner].pendingQueriesFlags[localThreadData->tid]  && startBenchmark){
+    //    serveDelegatedInsertsAndQueries(localThreadData);
+    //}
 
     threadData[owner].pendingQueriesKeys[localThreadData->tid] = key;
     threadData[owner].pendingQueriesCounts[localThreadData->tid] = 0;
     threadData[owner].pendingQueriesFlags[localThreadData->tid] = 1;
 
-    if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
+    //if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
     while (threadData[owner].pendingQueriesFlags[localThreadData->tid] && startBenchmark){
-        if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
+        //if (!threadData[owner].queriesPending) threadData[owner].queriesPending = 1;
         serveDelegatedInsertsAndQueries(localThreadData);
     }
     return threadData[owner].pendingQueriesCounts[localThreadData->tid];
@@ -303,10 +303,12 @@ void threadWork(threadDataStruct *localThreadData)
 void * threadEntryPoint(void * threadArgs){
     int tid = *((int *) threadArgs);
     threadDataStruct * localThreadData = &(threadData[tid]);
-    #if ITHACA
+    #if ITHACA == 1
     //ITHACA: fill first NUMA node first (even numbers)
     int thread_id = (tid%36)*2 + tid/36;
     setaffinity_oncpu(thread_id);
+    #elif ITHACA == 2
+    setaffinity_oncpu(tid);
     #else
     setaffinity_oncpu(14*(tid%2)+(tid/2)%14);
     #endif
