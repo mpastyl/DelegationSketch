@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <random>
 
+#define PREINSERT 0
+
 using namespace std;
 
 FilterStruct * filterMatrix;
@@ -28,7 +30,7 @@ static inline int findOwner(unsigned int key){
     return precomputedMods[key & 511];
 }
 
-#if (!DURATION && DELEGATION_FILTERS) 
+#if ((!DURATION && DELEGATION_FILTERS) || (PREINSERT))
 volatile int threadsFinished = 0;
 #endif
 
@@ -264,19 +266,21 @@ void threadWork(threadDataStruct *localThreadData)
                 double approximate_freq = querry(localThreadData, key);
                 localThreadData->returnData += approximate_freq;
             }
-            numInserts++;
-            #if DELEGATION_FILTERS
-            serveDelegatedInserts(localThreadData);
-            //int old_owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
-            int owner = findOwner(key);
-            delegateInsert(localThreadData, key, 1, owner);
-            #elif AUGMENTED_SKETCH
-            insertFilterNoWriteBack(localThreadData, key, 1);
-            #elif USE_FILTER
-            insertFilterWithWriteBack(localThreadData, key);
-            #else
-            insert(localThreadData, key, 1);
-            #endif
+            else{
+                numInserts++;
+                #if DELEGATION_FILTERS
+                serveDelegatedInserts(localThreadData);
+                //int old_owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
+                int owner = findOwner(key);
+                delegateInsert(localThreadData, key, 1, owner);
+                #elif AUGMENTED_SKETCH
+                insertFilterNoWriteBack(localThreadData, key, 1);
+                #elif USE_FILTER
+                insertFilterWithWriteBack(localThreadData, key);
+                #else
+                insert(localThreadData, key, 1);
+                #endif
+            }
             localThreadData->elementsProcessed++;
         }
         //If duration is 0 then I only loop once over the input. This is to do accuracy tests.
@@ -342,6 +346,35 @@ void * threadEntryPoint(void * threadArgs){
     localThreadData->insertsPending = 0;
     localThreadData->queriesPending = 0;
     localThreadData->listOfFullFilters = NULL;
+
+    #if PREINSERT
+    // insert the input once to prepare the sketches and the filters
+    // FIXME: reuse the code from threadWork
+    int start = localThreadData->startIndex;
+    int end = localThreadData->endIndex;
+    for (int i = start; i < end; i++)
+    {
+        unsigned int key = (*localThreadData->theData->tuples)[i];
+        #if DELEGATION_FILTERS
+        serveDelegatedInserts(localThreadData);
+        //int old_owner = key - numberOfThreads * libdivide::libdivide_s32_do((uint32_t)key, fastDivHandle);
+        int owner = findOwner(key);
+        delegateInsert(localThreadData, key, 1, owner);
+        #elif AUGMENTED_SKETCH
+        insertFilterNoWriteBack(localThreadData, key, 1);
+        #elif USE_FILTER
+        insertFilterWithWriteBack(localThreadData, key);
+        #else
+        insert(localThreadData, key, 1);
+        #endif
+        serveDelegatedInsertsAndQueries(localThreadData); 
+        __sync_fetch_and_add( &threadsFinished, 1);
+        while( threadsFinished < numberOfThreads){
+            serveDelegatedInsertsAndQueries(localThreadData); 
+        }
+    }
+    #endif
+
 
     barrier_cross(&barrier_global);
     barrier_cross(&barrier_started);
@@ -468,6 +501,9 @@ int main(int argc, char **argv)
         initThreadData(cmArray,r1);
         spawnThreads();
         barrier_cross(&barrier_global);        
+        #if PREINSERT
+        threadsFinished = 0;
+        #endif
 
         startTime();
 
