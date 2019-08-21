@@ -5,10 +5,23 @@ lines = ["-","--","-.",":"]
 linecycler = cycle(lines)
 
 #versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
-versions = ["augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
+versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
-thread_list=[20]
+thread_list=[69]
+
+def sortAccordingToTrueValues(trueValues, answers):
+    #zipped = zip(trueValues,answers)
+    #res = [x for _, x in sorted(zipped, reverse = True)]
+    sortingIndexes = sorted(range(len(trueValues)), key=lambda k: trueValues[k], reverse = True)
+    res = []
+    for x in sortingIndexes:
+        res.append(answers[x])
+    return res
+
+def sortAll(trueValues, totalAnswers):
+    for version in versions:
+        totalAnswers[(version,thread_list[0])] = sortAccordingToTrueValues(trueValues, totalAnswers[(version,thread_list[0])])
 
 def computeARE(groundTruth, estimates):
     sum = 0
@@ -53,12 +66,14 @@ for version in versions:
 
         hist, answers = deserializeFrequencies(indexes, hist, answers)
 
-        #print "Version ", version, " Average Relative Error: ", computeARE(hist,answers)
-        #print "Version ", version, " Observed Error: ", computeObservedError(hist, answers)
+        print "Version ", version, " Average Relative Error: ", computeARE(hist,answers)
+        print "Version ", version, " Observed Error: ", computeObservedError(hist, answers)
 
         totalHist[(version,threads)] = hist
         totalAnswers[(version,threads)] = answers
 
+sortAll(totalHist[(versions[0],thread_list[0])], totalAnswers)
+totalHist[(versions[0],thread_list[0])] =  sorted(totalHist[(versions[0],thread_list[0])], reverse = True)
 plt.plot(totalHist[(versions[0],thread_list[0])], label = "True")
 for version in versions:
     plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = version)
