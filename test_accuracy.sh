@@ -22,9 +22,15 @@ do
         for queries in $query_rates
         do
             if [ "$version" = "cm_shared" ] || [ "$version" = "cm_shared_filtered" ]; then
-            echo "Using $rows * " $(($buckets/$threads))
+            	echo "Memory per thread" $(($buckets*$rows*4))
                 ./bin/$version.out 10000 600000 $(($buckets*$threads)) $rows 1 1 0 1 $threads $queries 0 >/dev/null
+            elif [ "$version" = "cm_delegation_filters" ] || [ "$version" = "cm_delegation_filters_with_linked_list" ]; then
+	    	new_columns=$((($buckets*$rows*4 - $threads*64)/($rows*4)))
+	    	echo "Memory per thread " $(($new_columns*$rows*4 + $threads*64))
+	    	echo "Using " $new_columns "columns"
+                ./bin/$version.out 10000 600000 $new_columns $rows 1 1 0 1 $threads $queries 0 >/dev/null
             else
+		echo "Memory per thread" $(($buckets*$rows*4))
                 ./bin/$version.out 10000 600000 $buckets $rows 1 1 0 1 $threads $queries 0 >/dev/null
             fi
             cp logs/count_min_results.txt logs/${version}_${threads}_accuracy.log
