@@ -5,6 +5,7 @@
 #include "thread_data.h"
 #include "thread_utils.h"
 #include "filter.h"
+#include "getticks.h"
 
 #include <sys/time.h>
 #include <time.h>
@@ -43,8 +44,38 @@ unsigned int Random_Generate()
 }
 
 
-int shouldQuery(int index, int tid){
-    return (index )% 1000; //NOTE: not random enough?
+static inline unsigned long* seed_rand()
+{
+    unsigned long* seeds;
+    /* seeds = (unsigned long*) ssalloc_aligned(64, 64); */
+    //seeds = (unsigned long*) memalign(64, 64);
+    seeds = (unsigned long*) calloc(3,64);
+    seeds[0] = getticks() % 123456789;
+    seeds[1] = getticks() % 362436069;
+    seeds[2] = getticks() % 521288629;
+    return seeds;
+}
+
+#define my_random xorshf96
+
+static inline unsigned long
+xorshf96(unsigned long* x, unsigned long* y, unsigned long* z)  //period 2^96-1
+{
+    unsigned long t;
+    (*x) ^= (*x) << 16;
+    (*x) ^= (*x) >> 5;
+    (*x) ^= (*x) << 1;
+
+    t = *x;
+    (*x) = *y;
+    (*y) = *z;
+    (*z) = t ^ (*x) ^ (*y);
+
+  return *z;
+}
+
+int shouldQuery(threadDataStruct *ltd){
+    return (my_random(&(ltd->seeds[0]), &(ltd->seeds[1]), &(ltd->seeds[2])) % 1000);
 }
 
 void serveDelegatedInserts(threadDataStruct * localThreadData){
@@ -259,7 +290,7 @@ void threadWork(threadDataStruct *localThreadData)
             {
                 break;
             }
-            if (shouldQuery(localThreadData->elementsProcessed, localThreadData->tid) < QUERRY_RATE)
+            if (shouldQuery(localThreadData) < QUERRY_RATE)
             {
                 numQueries++;
                 serveDelegatedQueries(localThreadData);
@@ -346,6 +377,7 @@ void * threadEntryPoint(void * threadArgs){
     localThreadData->insertsPending = 0;
     localThreadData->queriesPending = 0;
     localThreadData->listOfFullFilters = NULL;
+    localThreadData->seeds = seed_rand();
 
     #if PREINSERT
     // insert the input once to prepare the sketches and the filters

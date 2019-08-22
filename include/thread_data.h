@@ -50,6 +50,7 @@ typedef struct
     int elementsProcessed;
     struct timeval start;
     struct timeval end;
+    unsigned long * seeds;
     int startIndex;
     int endIndex;
     struct libdivide::libdivide_s32_t * fastDivHandle;
