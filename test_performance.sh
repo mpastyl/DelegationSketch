@@ -1,7 +1,7 @@
-RUN_ON_ITHACA=1
-thread_list=`seq 1 4 72`
+RUN_ON_ITHACA=2
+thread_list=`seq 1 10 288`
 
-buckets=512
+buckets=800 #use 800 for odysseus, 512 for ithaca
 rows=8
 
 universe_size=1000000
@@ -28,6 +28,9 @@ do
         do
             if [ "$version" = "cm_shared" ] || [ "$version" = "cm_shared_filtered" ]; then
                 ./bin/$version.out $universe_size $stream_size $(($buckets*$rows)) $rows 1 1.5 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries.log
+            elif [ "$version" = "cm_delegation_filters" ] || [ "$version" = "cm_delegation_filters_with_linked_list" ]; then
+                new_columns=$((($buckets*$rows*4 - $threads*64)/($rows*4)))
+                ./bin/$version.out $universe_size $stream_size $new_columns $rows 1 1.5 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries.log
             else
                 ./bin/$version.out $universe_size $stream_size $buckets $rows 1 1.5 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries.log
             fi
@@ -36,7 +39,7 @@ do
 done
 
 query_rates="0 1 2 3 4 5 6"
-thread_list="72"
+thread_list="288"
 for version in $versions
 do
     for threads  in $thread_list
@@ -47,6 +50,9 @@ do
         do
             if [ "$version" = "cm_shared" ] || [ "$version" = "cm_shared_filtered" ]; then
                 ./bin/$version.out $universe_size $stream_size $(($buckets*$rows)) $rows 1 1.5 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${threads}_threads.log
+            elif [ "$version" = "cm_delegation_filters" ] || [ "$version" = "cm_delegation_filters_with_linked_list" ]; then
+                new_columns=$((($buckets*$rows*4 - $threads*64)/($rows*4)))
+                ./bin/$version.out $universe_size $stream_size $new_columns $rows 1 1.5 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${threads}_threads.log
             else
                 ./bin/$version.out $universe_size $stream_size $buckets $rows 1 1.5 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${threads}_threads.log
             fi
@@ -55,7 +61,7 @@ do
 done
 
 skew_rates="0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
-thread_list="72"
+thread_list="288"
 query_rates="0 1 2 3"
 for version in $versions
 do
@@ -69,6 +75,9 @@ do
         do
             if [ "$version" = "cm_shared" ] || [ "$version" = "cm_shared_filtered" ]; then
                 ./bin/$version.out $universe_size $stream_size $(($buckets*$rows)) $rows 1 $skew 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/skew_${version}_${threads}_threads_${queries}_queries.log
+            elif [ "$version" = "cm_delegation_filters" ] || [ "$version" = "cm_delegation_filters_with_linked_list" ]; then
+                new_columns=$((($buckets*$rows*4 - $threads*64)/($rows*4)))
+                ./bin/$version.out $universe_size $stream_size $new_columns $rows 1 $skew 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/skew_${version}_${threads}_threads_${queries}_queries.log
             else
                 ./bin/$version.out $universe_size $stream_size $buckets $rows 1 $skew 0 1 $threads $queries 1 | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/skew_${version}_${threads}_threads_${queries}_queries.log
             fi
