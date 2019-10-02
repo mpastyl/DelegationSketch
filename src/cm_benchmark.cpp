@@ -16,6 +16,7 @@
 #include <x86intrin.h>
 #include <algorithm>
 #include <random>
+#include <string.h>
 
 #define PREINSERT 0
 
@@ -429,6 +430,29 @@ void postProcessing(){
     printf("LOG: num Queries: %ld, num Inserts %ld, percentage %f garbage print %f\n",sumNumQueries, sumNumInserts, percentage, sumReturnValues);
 }
 
+vector<unsigned int> *read_ints(const char *file_name, int *length)
+{
+    FILE *file = fopen(file_name, "r");
+    unsigned int i = 0;
+
+    //read number of values in the file
+    fscanf(file, "%d", &i);
+    //unsigned int *input_values = (unsigned int *)calloc(i, sizeof(unsigned int));
+    vector <unsigned int> * input_values = new vector<unsigned int>(i, 0);
+    *length = i;
+
+    fscanf(file, "%d", &i);
+    int index = 0;
+    while (!feof(file))
+    {
+        (*input_values)[index] = i;
+        index++;
+        fscanf(file, "%d", &i);
+    }
+    fclose(file);
+    return input_values;
+}
+
 int main(int argc, char **argv)
 {
     int dom_size;
@@ -443,14 +467,26 @@ int main(int argc, char **argv)
 
     int i, j;
 
-    if (argc != 12)
+    if ((argc != 12) && (argc != 13))
     {
-        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no num_threads querry_rate duration(in sec, 0 means one pass over the data)\n");
+        printf("Usage: sketch_compare.out dom_size tuples_no buckets_no rows_no DIST_TYPE DIST_PARAM DIST_DECOR runs_no num_threads querry_rate duration(in sec, 0 means one pass over the data), (optional) input_file_name \n");
         exit(1);
+    }
+    int use_real_data = 0;
+    char input_file_name[1024];
+    vector<unsigned int> * input_data;
+    int input_length;
+    if (argc==13){
+        use_real_data = 1;
+        strcpy(input_file_name,argv[12]);
+        input_data = read_ints(input_file_name, &input_length);
     }
 
     dom_size = atoi(argv[1]);
     tuples_no = atoi(argv[2]);
+    if (use_real_data){
+        tuples_no = input_length;
+    }
 
     buckets_no = atoi(argv[3]);
     rows_no = atoi(argv[4]);
@@ -476,7 +512,12 @@ int main(int argc, char **argv)
     //generate the two relations
     Relation *r1 = new Relation(dom_size, tuples_no);
 
-    r1->Generate_Data(DIST_TYPE, DIST_PARAM, DIST_SHUFF); //Note last arg should be 1
+    if (use_real_data){
+        r1->tuples = input_data;
+    }
+    else{
+        r1->Generate_Data(DIST_TYPE, DIST_PARAM, DIST_SHUFF); //Note last arg should be 1
+    }
     if (r1->tuples_no < tuples_no){ //Sometimes Generate_Data might generate less than tuples_no
         tuples_no = r1->tuples_no;
     }
@@ -504,10 +545,12 @@ int main(int argc, char **argv)
             cm_cw2b[i] = new Xi_CW4B(I1, I2, buckets_no);
         }
 
-        unsigned long long true_join_size = 0;
-        for (i = 0; i < dom_size; i++)
-        {
-            hist1[i] = 0;
+        if (!use_real_data){
+            unsigned long long true_join_size = 0;
+            for (i = 0; i < dom_size; i++)
+            {
+                hist1[i] = 0;
+            }
         }
 
         printf("size of the sketch %lu\n",sizeof(Count_Min_Sketch));
@@ -525,9 +568,11 @@ int main(int argc, char **argv)
             }
         }
 
-        for (i = 0; i < tuples_no; i++)
-        {
-            hist1[(*r1->tuples)[i]]++;
+        if (!use_real_data){
+            for (i = 0; i < tuples_no; i++)
+            {
+                hist1[(*r1->tuples)[i]]++;
+            }
         }
 
         initThreadData(cmArray,r1);
@@ -557,52 +602,52 @@ int main(int argc, char **argv)
         
         printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / getTimeMs() / 1000);
         
-        FILE *fp = fopen("logs/count_min_results.txt", "w");
-        for (i = 0; i < dom_size; i++)
-        {
-            #if HYBRID
-            double approximate_freq = globalSketch->Query_Sketch(i);
-            approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-            #elif REMOTE_INSERTS || USE_MPSC 
-            double approximate_freq = cmArray[findOwner(i)]->Query_Sketch(i);
-            #elif LOCAL_COPIES
-            double approximate_freq = 0;
-            for (int j=0; j<numberOfThreads; j++){
-                approximate_freq += cmArray[j]->Query_Sketch(i);
-            }
-            #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
-            double approximate_freq = 0;
-            for (int j=0; j<numberOfThreads; j++){
-                unsigned int countInFilter = queryFilter(i, &(threadData[j].Filter));
-                if (countInFilter){
-                    approximate_freq += countInFilter;
-                }
-                else{
-                    approximate_freq += cmArray[j]->Query_Sketch(i);
-                }
-            }
-            #elif SHARED_SKETCH
-            double approximate_freq = globalSketch->Query_Sketch(i);
-            #elif DELEGATION_FILTERS
-            double approximate_freq = 0;
-            int owner = findOwner(i);
-            unsigned int countInFilter = queryFilter(i, &(threadData[owner].Filter));
-            if (countInFilter){
-                approximate_freq += countInFilter;
-            }
-            else{
-                approximate_freq += cmArray[owner]->Query_Sketch(i);
-            }
-            for (int j =0; j < numberOfThreads; j++){
-                approximate_freq+= queryFilter(i, &(filterMatrix[j * numberOfThreads + owner]));
-            }
-            #endif
-            #if USE_FILTER
-                approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-            #endif
-            fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
-        }
-        fclose(fp);
+        // FILE *fp = fopen("logs/count_min_results.txt", "w");
+        // for (i = 0; i < dom_size; i++)
+        // {
+        //     #if HYBRID
+        //     double approximate_freq = globalSketch->Query_Sketch(i);
+        //     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+        //     #elif REMOTE_INSERTS || USE_MPSC 
+        //     double approximate_freq = cmArray[findOwner(i)]->Query_Sketch(i);
+        //     #elif LOCAL_COPIES
+        //     double approximate_freq = 0;
+        //     for (int j=0; j<numberOfThreads; j++){
+        //         approximate_freq += cmArray[j]->Query_Sketch(i);
+        //     }
+        //     #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
+        //     double approximate_freq = 0;
+        //     for (int j=0; j<numberOfThreads; j++){
+        //         unsigned int countInFilter = queryFilter(i, &(threadData[j].Filter));
+        //         if (countInFilter){
+        //             approximate_freq += countInFilter;
+        //         }
+        //         else{
+        //             approximate_freq += cmArray[j]->Query_Sketch(i);
+        //         }
+        //     }
+        //     #elif SHARED_SKETCH
+        //     double approximate_freq = globalSketch->Query_Sketch(i);
+        //     #elif DELEGATION_FILTERS
+        //     double approximate_freq = 0;
+        //     int owner = findOwner(i);
+        //     unsigned int countInFilter = queryFilter(i, &(threadData[owner].Filter));
+        //     if (countInFilter){
+        //         approximate_freq += countInFilter;
+        //     }
+        //     else{
+        //         approximate_freq += cmArray[owner]->Query_Sketch(i);
+        //     }
+        //     for (int j =0; j < numberOfThreads; j++){
+        //         approximate_freq+= queryFilter(i, &(filterMatrix[j * numberOfThreads + owner]));
+        //     }
+        //     #endif
+        //     #if USE_FILTER
+        //         approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+        //     #endif
+        //     fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
+        // }
+        // fclose(fp);
         //clean-up everything
 
         for (i = 0; i < rows_no; i++)
