@@ -3,6 +3,7 @@ import math
 import subprocess
 from matplotlib.font_manager import FontProperties
 import numpy as np
+from plotters import plot_bars
 
 fontP = FontProperties()
 fontP.set_size('medium')
@@ -47,6 +48,32 @@ def average_and_std(l , reps):
 		index += reps
 	return ret_avg, ret_std
 
+#######real world data
+
+RealData = {}
+RealDataStd = {}
+query_rates = [0,1,2,3]
+datasetNames = ["CAIDA_2018_source_ips","CAIDA_2018_source_ports"]
+fancy_data_set_names  = ["CAIDA (low skew)", "CAIDA (high skew)"]
+for version in versions:
+	for query in query_rates:
+	    for dataName in datasetNames:
+	    	raw_data = read_perf("logs/cm_"+version+"_"+str(query)+"_queries_real_data_"+dataName+"_10_times_final.log")
+	    	RealData[(version, query,dataName)], RealDataStd[(version, query,dataName)] = average_and_std(raw_data,REPS)
+
+for query in query_rates:
+	fig , ax = plt.subplots(1,1)
+	kernels = []
+	kernels_std = []
+	for version in versions:
+		kernels.append ( [RealData[(version,query,dataName)][0] for dataName in datasetNames]  )
+		kernels_std.append ( [RealDataStd[(version,query,dataName)][0] for dataName in datasetNames]  )
+	lgd = plot_bars(ax, kernels, fancy_data_set_names,"Versions",fancy_names,[],kernels_std)
+	name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"real_data_10_times"+str(query)+"_queries_final.pdf"
+	plt.savefig(name)
+	plt.show()
+#######
+
 ScalingData ={}
 ScalingStd ={}
 for version in versions:
@@ -77,7 +104,7 @@ for queries in query_rates:
         #serial_ax[plot_count].set_ylim(0,70)
     
     plot_count +=1
-name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1.5_skew_10_times_final.pdf"
+name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_skew_10_times_final.pdf"
 plt.savefig(name)
 plt.show()
 
@@ -96,7 +123,7 @@ for queries in query_rates:
     plt.xlabel("Threads")
     plt.ylabel("Mops/sec")
     #plt.set_ylim(0,70)
-    name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1.5_queries_"+str(queries)+"_skew_10_times_final.pdf"
+    name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_queries_"+str(queries)+"_skew_10_times_final.pdf"
     plt.savefig(name)
     plt.show()
 
