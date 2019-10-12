@@ -62,7 +62,7 @@ for version in versions:
 	    	RealData[(version, query,dataName)], RealDataStd[(version, query,dataName)] = average_and_std(raw_data,REPS)
 
 for query in query_rates:
-	fig , ax = plt.subplots(1,1)
+	fig , ax = plt.subplots(1,1,figsize = [4,5])
 	kernels = []
 	kernels_std = []
 	for version in versions:
