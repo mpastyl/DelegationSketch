@@ -14,6 +14,8 @@ linecycler = cycle(lines)
 markers = ['+','.','o','^']
 markercycler = cycle(markers)
 
+
+name_prefix = "ithaca_"
 threads = range(4,76,4)
 query_rates = [0,1,2,3]
 #versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"] 
@@ -75,7 +77,7 @@ for queries in query_rates:
         #serial_ax[plot_count].set_ylim(0,70)
     
     plot_count +=1
-name="/home/chasty/sketches/rusu-sketches-size-join-estimation/scaling_at_1.5_skew_10_times_final.pdf"
+name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1.5_skew_10_times_final.pdf"
 plt.savefig(name)
 plt.show()
 
@@ -94,7 +96,7 @@ for queries in query_rates:
     plt.xlabel("Threads")
     plt.ylabel("Mops/sec")
     #plt.set_ylim(0,70)
-    name="/home/chasty/sketches/rusu-sketches-size-join-estimation/scaling_at_1.5_queries_"+str(queries)+"_skew_10_times_final.pdf"
+    name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1.5_queries_"+str(queries)+"_skew_10_times_final.pdf"
     plt.savefig(name)
     plt.show()
 
@@ -118,7 +120,7 @@ lgd=plt.legend(loc = 'upper right')
 #lgd = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3, prop=fontP)
 plt.xlabel("Query rate (%)")
 plt.ylabel("Mops/sec")
-name="/home/chasty/sketches/rusu-sketches-size-join-estimation/query_effect_1_5_skew_10_times_final.pdf"
+name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"query_effect_1_5_skew_10_times_final.pdf"
 plt.savefig(name,bbox_extra_artists=(lgd,), bbox_inches = "tight")
 plt.show()
 
@@ -145,6 +147,6 @@ for query in query_rates:
     #lgd = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
     plt.xlabel("Skew parameter")
     plt.ylabel("Mops/sec")
-    name="/home/chasty/sketches/rusu-sketches-size-join-estimation/skew_"+str(query)+"_queries_final.pdf"
+    name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"skew_"+str(query)+"_queries_final.pdf"
     plt.savefig(name,bbox_extra_artists=(lgd,), bbox_inches = "tight")
     plt.show()
