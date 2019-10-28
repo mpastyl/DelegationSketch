@@ -19,7 +19,7 @@
 #include <string.h>
 
 #define PREINSERT 0
-
+#define NO_SQUASHING 0
 using namespace std;
 
 FilterStruct * filterMatrix;
@@ -139,6 +139,7 @@ unsigned int queryAllRelatedDataStructuresAndUpdatePendigQueries(threadDataStruc
         queryResult += queryFilter(key, &(filterMatrix[j * numberOfThreads + localThreadData->tid]));
     }
     
+    #if !NO_SQUASHING
     // Search all the pending queries to find queries with the same key that can be served
     for (int j=0; j< numberOfThreads; j++){
         if (localThreadData->pendingQueriesFlags[j] && (localThreadData->pendingQueriesKeys[j] == key)){
@@ -146,6 +147,7 @@ unsigned int queryAllRelatedDataStructuresAndUpdatePendigQueries(threadDataStruc
             localThreadData->pendingQueriesFlags[j] = 0;
         }
     }
+    #endif	
     return queryResult;
 }
 
@@ -155,6 +157,10 @@ void serveDelegatedQueries(threadDataStruct *localThreadData){
         if (localThreadData->pendingQueriesFlags[i]){
             int key = localThreadData->pendingQueriesKeys[i];
             unsigned int ret = queryAllRelatedDataStructuresAndUpdatePendigQueries(localThreadData, key);
+	    #if NO_SQUASHING
+            	localThreadData->pendingQueriesCounts[i] = ret;
+            	localThreadData->pendingQueriesFlags[i] = 0;
+	    #endif
         }
     }
     //localThreadData->queriesPending = 0;

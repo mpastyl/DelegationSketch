@@ -1,32 +1,28 @@
 from matplotlib import pyplot as plt
-import numpy as np
 
 from itertools import cycle
 lines = ["-","--","-.",":"]
 linecycler = cycle(lines)
-markers = ['+','.','o','^']
-markercycler = cycle(markers)
 
 from matplotlib.font_manager import FontProperties
 fontP = FontProperties()
 fontP.set_size('large')
 
-suffix="ithaca_final"
+suffix="zipf"
+
+
+###NOTE!!!!
+
+#Use 256 buckets in the test scripts to reproduce the plots
 
 #versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
-versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters_with_linked_list"]
-#versions = ["local_copies", "delegation_filters_with_linked_list"]
-#versions = ["local_copies", "shared", "remote_inserts","shared_small"]
-#fancy_names = ["Thread-local", "Single Sketch", "Domain-spliting", "Reference"]
-fancy_names = ["Single-shared", "Thread-local", "Augmented Sketch", "Delegation Sketch"]
-
+#versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
+versions = ["local_copies", "shared", "remote_inserts","shared_small"]
+fancy_names = ["Thread-local", "Single Sketch", "Domain-spliting", "Reference"]
 #filename = "count_min_results.txt"
-#thread_list=range(4,76,4)
-thread_list=[4]
-#thread_list=range(1,11)
-
-def runningMeanFast(x, N):
-    return np.convolve(x, np.ones((N,))/N)[(N-1):]
+#thread_list=range(1,29)
+#thread_list=[10]
+thread_list=range(1,11)
 
 def sortAccordingToTrueValues(trueValues, answers):
     #zipped = zip(trueValues,answers)
@@ -80,7 +76,6 @@ for version in versions:
                 index = int(line.split()[0])
                 trueValue = int(line.split()[1])
                 approximation =  float(line.split()[2])
-		approximation =  approximation - trueValue		
 
                 indexes.append(index)
                 hist.append(trueValue)
@@ -98,31 +93,23 @@ for version in versions:
 
 sortAll(totalHist[(versions[0],thread_list[0])], totalAnswers)
 totalHist[(versions[0],thread_list[0])] =  sorted(totalHist[(versions[0],thread_list[0])], reverse = True)
-#plt.plot(totalHist[(versions[0],thread_list[0])], label = "True Frequency")
-c=0
+plt.plot(totalHist[(versions[0],thread_list[0])], label = "True")
 for version in versions:
-    #plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = fancy_names[c])
-    plt.plot(runningMeanFast(totalAnswers[(version,thread_list[0])],1000)[0:-1001], next(linecycler), label = fancy_names[c])
-    c += 1
+    plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = version)
 plt.legend()
-plt.xlabel("Index of each key in the stream, sorted by their frequency in descending order")
-plt.ylabel("Overstimation of the true frequency")
-name="/home/chasty/sketches/rusu-sketches-size-join-estimation/absolute_error_per_key_"+suffix+".pdf"
-plt.savefig(name)
 plt.show()
 
-#for version in versions:
-#    for i in range(len(totalAnswers[(version,thread_list[0])])):
-#        if totalAnswers[(version,thread_list[0])][i] < totalHist[(versions[0],thread_list[0])][i]:
-#            print "Under estimation in ",i
+for version in versions:
+    for i in range(len(totalAnswers[(version,thread_list[0])])):
+        if totalAnswers[(version,thread_list[0])][i] < totalHist[(versions[0],thread_list[0])][i]:
+            print "Under estimation in ",i
 
 FIG_SIZE = (5,5)
 plt.figure(figsize=FIG_SIZE)
 c = 0
-markercycler = cycle(markers)
 for version in versions:
     ARE = [totalARE[(version,threads)] for threads in thread_list]
-    plt.plot(thread_list, ARE, label = fancy_names[c],marker = next(markercycler), markersize=4)
+    plt.plot(thread_list, ARE, label = fancy_names[c])
     c = c +1
 plt.xlabel("Threads")
 plt.ylabel("Average Relative Error")
