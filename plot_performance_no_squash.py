@@ -85,7 +85,7 @@ name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"
 plt.show()
 
 #########same but separate plots
-FIG_SIZE = [5,5]
+FIG_SIZE = [4,4]
 for queries in query_rates:
     plt.figure(figsize = FIG_SIZE)
     linecycler = cycle(lines)
@@ -98,7 +98,11 @@ for queries in query_rates:
     #plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2, prop=fontP)
     plt.legend(loc='upper left')
     plt.xlabel("Threads")
-    plt.ylabel("Mops/sec")
+    plt.ylabel("Throughput (Mops/sec)")
+    ticks = range(10,80,10)
+    tick_labels = [str(x) for x in ticks]
+    plt.xticks(ticks,tick_labels)
+    plt.tight_layout()
     #plt.set_ylim(0,70)
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_queries_"+str(queries)+"_skew_10_times_final_no_squash.pdf"
     plt.savefig(name)
@@ -107,7 +111,7 @@ for queries in query_rates:
 
 
 
-FIG_SIZE = (5,5)
+FIG_SIZE = (4,4)
 skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
 skew_rates = [float(x) for x in skew_rates_raw_list.split()]
 threads="72"

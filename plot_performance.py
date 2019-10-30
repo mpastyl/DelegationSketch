@@ -8,7 +8,9 @@ from plotters import plot_bars
 #fontP = FontProperties()
 #fontP.set_size('large')
 import matplotlib
-matplotlib.rcParams.update({'font.size': 13})
+
+fontsize =13 
+matplotlib.rcParams.update({'font.size': fontsize})
 
 
 from itertools import cycle
@@ -65,7 +67,8 @@ for version in versions:
 	    	RealData[(version, query,dataName)], RealDataStd[(version, query,dataName)] = average_and_std(raw_data,REPS)
 
 c = 0
-FIG_SIZE = [5,7]
+matplotlib.rcParams.update({'font.size': 16})
+FIG_SIZE = [5,6]
 for query in query_rates:
 	fig , ax = plt.subplots(1,1,figsize = FIG_SIZE)
 	kernels = []
@@ -77,6 +80,7 @@ for query in query_rates:
 	if (c==0):
 	    plt.legend(fancy_names)
 	c += 1
+	plt.tight_layout()
 	name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"real_data_10_times"+str(query)+"_queries_final.pdf"
 	plt.savefig(name)
 	plt.show()
@@ -117,6 +121,7 @@ plt.savefig(name)
 plt.show()
 
 #########same but separate plots
+matplotlib.rcParams.update({'font.size': fontsize})
 FIG_SIZE = [8,6]
 c=0
 for queries in query_rates:
@@ -148,7 +153,9 @@ for version in versions:
     QueriesData[version], QueriesStd[version] = average_and_std(raw_data, REPS)
 
 
-FIG_SIZE = [7,7]
+
+matplotlib.rcParams.update({'font.size': 17})
+FIG_SIZE = [6,6]
 plt.figure(figsize = FIG_SIZE)
 for version in versions:
     #plt.plot(query_rates,QueriesData[version],  next(linecycler), label = version)
@@ -158,11 +165,14 @@ lgd=plt.legend(loc = 'upper right')
 #lgd = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3, prop=fontP)
 plt.xlabel("Query rate (%)")
 plt.ylabel("Throughput (Mops/sec)")
+plt.tight_layout()
 name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"query_effect_1_5_skew_10_times_final.pdf"
-plt.savefig(name,bbox_extra_artists=(lgd,), bbox_inches = "tight")
+#plt.savefig(name,bbox_extra_artists=(lgd,), bbox_inches = "tight")
+plt.savefig(name)
 plt.show()
 
 
+matplotlib.rcParams.update({'font.size': 15})
 FIG_SIZE = (7,5)
 skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
 skew_rates = [float(x) for x in skew_rates_raw_list.split()]
@@ -187,6 +197,7 @@ for query in query_rates:
         plt.legend(loc = 'upper left')
     plt.xlabel("Skew parameter")
     plt.ylabel("Throuhput (Mops/sec)")
+    plt.tight_layout()
     c +=1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"skew_"+str(query)+"_queries_final.pdf"
     plt.savefig(name)
