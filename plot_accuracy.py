@@ -7,9 +7,11 @@ linecycler = cycle(lines)
 markers = ['+','.','o','^']
 markercycler = cycle(markers)
 
-from matplotlib.font_manager import FontProperties
-fontP = FontProperties()
-fontP.set_size('large')
+#from matplotlib.font_manager import FontProperties
+#fontP = FontProperties()
+#fontP.set_size('large')
+import matplotlib
+matplotlib.rcParams.update({'font.size': 11})
 
 suffix="ithaca_final"
 
@@ -100,13 +102,16 @@ sortAll(totalHist[(versions[0],thread_list[0])], totalAnswers)
 totalHist[(versions[0],thread_list[0])] =  sorted(totalHist[(versions[0],thread_list[0])], reverse = True)
 #plt.plot(totalHist[(versions[0],thread_list[0])], label = "True Frequency")
 c=0
+FIG_SIZE = (6,5)
+plt.figure(figsize=FIG_SIZE)
 for version in versions:
     #plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = fancy_names[c])
     plt.plot(runningMeanFast(totalAnswers[(version,thread_list[0])],1000)[0:-1001], next(linecycler), label = fancy_names[c])
     c += 1
 plt.legend()
-plt.xlabel("Index of each key in the stream, sorted by their frequency in descending order")
-plt.ylabel("Overstimation of the true frequency")
+plt.xlabel("Index of each input key, sorted by their frequency in descending order")
+#plt.ylabel("Overstimation of the true frequency")
+plt.ylabel("Absolute error for each key")
 name="/home/chasty/sketches/rusu-sketches-size-join-estimation/absolute_error_per_key_"+suffix+".pdf"
 plt.savefig(name)
 plt.show()

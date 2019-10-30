@@ -16,7 +16,7 @@ def plot_bars(ax,groups,labels,title,legend,to_compare,stdz,show_legend=False, o
         # add some text for labels, title and axes ticks
         #ax.set_ylabel('Throughput (Mbps)')
         #ax.set_ylabel('Execution time (ms)')
-	ax.set_ylabel("Mops/sec")
+	#ax.set_ylabel("Mops/sec")
         #ax.set_xlabel(title)
         #ax.set_xticks(ind + 2*width)
         ax.set_xticks(ind+1*width)

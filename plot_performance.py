@@ -5,8 +5,11 @@ from matplotlib.font_manager import FontProperties
 import numpy as np
 from plotters import plot_bars
 
-fontP = FontProperties()
-fontP.set_size('medium')
+#fontP = FontProperties()
+#fontP.set_size('large')
+import matplotlib
+matplotlib.rcParams.update({'font.size': 13})
+
 
 from itertools import cycle
 #lines = ["-","--","-.",":"]
@@ -22,7 +25,7 @@ query_rates = [0,1,2,3]
 #versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"] 
 #versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"] 
 versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters_with_linked_list"] 
-fancy_names = ["Single-shared", "Thread-local", "Augmented Sketch", "Delegation Filters"] 
+fancy_names = ["Single-shared", "Thread-local", "Augmented Sketch", "Delegation Sketch"] 
 
 
 
@@ -61,14 +64,19 @@ for version in versions:
 	    	raw_data = read_perf("logs/cm_"+version+"_"+str(query)+"_queries_real_data_"+dataName+"_10_times_final.log")
 	    	RealData[(version, query,dataName)], RealDataStd[(version, query,dataName)] = average_and_std(raw_data,REPS)
 
+c = 0
+FIG_SIZE = [5,7]
 for query in query_rates:
-	fig , ax = plt.subplots(1,1,figsize = [4,5])
+	fig , ax = plt.subplots(1,1,figsize = FIG_SIZE)
 	kernels = []
 	kernels_std = []
 	for version in versions:
 		kernels.append ( [RealData[(version,query,dataName)][0] for dataName in datasetNames]  )
 		kernels_std.append ( [RealDataStd[(version,query,dataName)][0] for dataName in datasetNames]  )
 	lgd = plot_bars(ax, kernels, fancy_data_set_names,"Versions",fancy_names,[],kernels_std)
+	if (c==0):
+	    plt.legend(fancy_names)
+	c += 1
 	name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"real_data_10_times"+str(query)+"_queries_final.pdf"
 	plt.savefig(name)
 	plt.show()
@@ -98,10 +106,10 @@ for queries in query_rates:
         serial_ax[plot_count].plot(threads,ScalingData[(version,queries)], next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #serial_ax[plot_count].errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #serial_ax[plot_count].legend(loc=2)
-        serial_ax[plot_count].legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2, prop=fontP)
+        serial_ax[plot_count].legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
         serial_ax[plot_count].set_xlabel("Threads")
         serial_ax[plot_count].set_ylabel("Mops/sec")
-        #serial_ax[plot_count].set_ylim(0,70)
+        serial_ax[plot_count].set_ylim(0,2500)
     
     plot_count +=1
 name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_skew_10_times_final.pdf"
@@ -110,6 +118,7 @@ plt.show()
 
 #########same but separate plots
 FIG_SIZE = [8,6]
+c=0
 for queries in query_rates:
     plt.figure(figsize = FIG_SIZE)
     linecycler = cycle(lines)
@@ -119,10 +128,12 @@ for queries in query_rates:
         plt.plot(threads,ScalingData[(version,queries)], next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #plt.errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #plt.legend(loc=2)
-    plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2, prop=fontP)
+    #plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
+    plt.legend(loc="upper left")
     plt.xlabel("Threads")
-    plt.ylabel("Mops/sec")
-    #plt.set_ylim(0,70)
+    plt.ylabel("Throughput (Mops/sec)")
+    plt.ylim(0,2500)
+    c += 1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_queries_"+str(queries)+"_skew_10_times_final.pdf"
     plt.savefig(name)
     plt.show()
@@ -137,7 +148,7 @@ for version in versions:
     QueriesData[version], QueriesStd[version] = average_and_std(raw_data, REPS)
 
 
-FIG_SIZE = [4,4]
+FIG_SIZE = [7,7]
 plt.figure(figsize = FIG_SIZE)
 for version in versions:
     #plt.plot(query_rates,QueriesData[version],  next(linecycler), label = version)
@@ -146,7 +157,7 @@ for version in versions:
 lgd=plt.legend(loc = 'upper right')
 #lgd = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3, prop=fontP)
 plt.xlabel("Query rate (%)")
-plt.ylabel("Mops/sec")
+plt.ylabel("Throughput (Mops/sec)")
 name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"query_effect_1_5_skew_10_times_final.pdf"
 plt.savefig(name,bbox_extra_artists=(lgd,), bbox_inches = "tight")
 plt.show()
@@ -164,16 +175,19 @@ for version in versions:
 	    SkewnesData[(version, query)] = read_perf("logs/skew_cm_"+version+"_"+threads+"_threads_"+str(query)+"_queries.log")
 
 
+c = 0
 for query in query_rates:
     linecycler = cycle(lines)
     plt.figure(figsize=FIG_SIZE)
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name + " - 0."+ str(query)+ "% queries", marker = next(markercycler), markersize = 4)
-    lgd = plt.legend(loc = 'upper left')
-    #lgd = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
+        #plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name + " - 0."+ str(query)+ "% queries", marker = next(markercycler), markersize = 4)
+        plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name, marker = next(markercycler), markersize = 4)
+    if (c==0):
+        plt.legend(loc = 'upper left')
     plt.xlabel("Skew parameter")
-    plt.ylabel("Mops/sec")
+    plt.ylabel("Throuhput (Mops/sec)")
+    c +=1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"skew_"+str(query)+"_queries_final.pdf"
-    plt.savefig(name,bbox_extra_artists=(lgd,), bbox_inches = "tight")
+    plt.savefig(name)
     plt.show()
