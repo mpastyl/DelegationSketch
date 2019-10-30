@@ -4,21 +4,22 @@ from itertools import cycle
 lines = ["-","--","-.",":"]
 linecycler = cycle(lines)
 
-from matplotlib.font_manager import FontProperties
-fontP = FontProperties()
-fontP.set_size('large')
+#from matplotlib.font_manager import FontProperties
+#fontP = FontProperties()
+#fontP.set_size('large')
+fontsize =16
+import matplotlib
+matplotlib.rcParams.update({'font.size': fontsize})
 
-suffix="zipf"
+markers = ['+','.','o','^']
+markercycler = cycle(markers)
 
-
-###NOTE!!!!
-
-#Use 256 buckets in the test scripts to reproduce the plots
+suffix="uniform"
 
 #versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 #versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 versions = ["local_copies", "shared", "remote_inserts","shared_small"]
-fancy_names = ["Thread-local", "Single Sketch", "Domain-spliting", "Reference"]
+fancy_names = ["Thread-local", "Single Sketch", "Delegation Sketch", "Reference"]
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
 #thread_list=[10]
@@ -66,7 +67,10 @@ totalARE={}
 totalObsE={}
 for version in versions:
     for threads in thread_list:
-        filename = "logs/cm_"+version+"_"+str(threads)+"_accuracy.log"
+        if suffix == "zipf":
+            filename = "logs/cm_"+version+"_"+str(threads)+"_accuracy_domain_split_zipf_1.log"
+        else:
+            filename = "logs/cm_"+version+"_"+str(threads)+"_accuracy.log"
         hist = []
         answers = []
         indexes = []
@@ -93,11 +97,11 @@ for version in versions:
 
 sortAll(totalHist[(versions[0],thread_list[0])], totalAnswers)
 totalHist[(versions[0],thread_list[0])] =  sorted(totalHist[(versions[0],thread_list[0])], reverse = True)
-plt.plot(totalHist[(versions[0],thread_list[0])], label = "True")
-for version in versions:
-    plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = version)
-plt.legend()
-plt.show()
+#plt.plot(totalHist[(versions[0],thread_list[0])], label = "True")
+#for version in versions:
+#    plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = version)
+#plt.legend()
+#plt.show()
 
 for version in versions:
     for i in range(len(totalAnswers[(version,thread_list[0])])):
@@ -107,13 +111,15 @@ for version in versions:
 FIG_SIZE = (5,5)
 plt.figure(figsize=FIG_SIZE)
 c = 0
+maerkercycler = cycle(markers)
 for version in versions:
     ARE = [totalARE[(version,threads)] for threads in thread_list]
-    plt.plot(thread_list, ARE, label = fancy_names[c])
+    plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=4)
     c = c +1
-plt.xlabel("Threads")
+plt.xlabel("Threads" )
 plt.ylabel("Average Relative Error")
 lgd = plt.legend(loc = 'center right')
+plt.tight_layout()
 name="/home/chasty/sketches/rusu-sketches-size-join-estimation/average_relative_error_"+suffix+".pdf"
 plt.savefig(name, bbox_extra_artists=(lgd,), bbox_inches = "tight")
 plt.show()
