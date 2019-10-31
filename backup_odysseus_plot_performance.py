@@ -53,6 +53,12 @@ def average_and_std(l , reps):
 		index += reps
 	return ret_avg, ret_std
 
+def subsample(x):
+    if (len(x) % 2) == 0:
+        return x[1::2]
+    else:
+        return x[0::2]
+
 #######real world data
 
 RealData = {}
@@ -130,7 +136,7 @@ for queries in query_rates:
     maerkercycler = cycle(markers)
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        plt.plot(threads,ScalingData[(version,queries)], next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
+        plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #plt.errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #plt.legend(loc=2)
     #plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
