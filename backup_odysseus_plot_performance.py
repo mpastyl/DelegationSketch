@@ -9,7 +9,7 @@ from plotters import plot_bars
 #fontP.set_size('large')
 import matplotlib
 
-fontsize =13 
+fontsize =15
 matplotlib.rcParams.update({'font.size': fontsize})
 
 
@@ -127,7 +127,7 @@ plt.savefig(name)
 plt.show()
 
 #########same but separate plots
-matplotlib.rcParams.update({'font.size': fontsize})
+matplotlib.rcParams.update({'font.size': 18})
 FIG_SIZE = [8,6]
 c=0
 for queries in query_rates:
@@ -136,16 +136,20 @@ for queries in query_rates:
     maerkercycler = cycle(markers)
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
+	if (c==0): 
+            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-"+str(queries)+"%", marker = next(markercycler), markersize=4 )
+	else:
+            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #plt.errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #plt.legend(loc=2)
     #plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
     plt.legend(loc="upper left")
     plt.xlabel("Threads")
     plt.ylabel("Throughput (Mops/sec)")
-    plt.ylim(0,1400)
+    plt.ylim(0,1900)
     c += 1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_queries_"+str(queries)+"_skew_10_times_final.pdf"
+    plt.tight_layout()
     plt.savefig(name)
     plt.show()
 
@@ -160,7 +164,7 @@ for version in versions:
 
 
 
-matplotlib.rcParams.update({'font.size': 17})
+matplotlib.rcParams.update({'font.size': 20})
 FIG_SIZE = [6,6]
 plt.figure(figsize = FIG_SIZE)
 for version in versions:
