@@ -5,9 +5,13 @@ from matplotlib.font_manager import FontProperties
 import numpy as np
 from plotters import plot_bars
 
-fontP = FontProperties()
-fontP.set_size('large')
+#fontP = FontProperties()
+#fontP.set_size('large')
 #matplotlib.rcParams.update({'font.size': 14})
+import matplotlib
+fontsize =12
+matplotlib.rcParams.update({'font.size': fontsize})
+
 
 from itertools import cycle
 #lines = ["-","--","-.",":"]
@@ -50,6 +54,12 @@ def average_and_std(l , reps):
 		index += reps
 	return ret_avg, ret_std
 
+def subsample(x):
+    if (len(x) % 2) == 0:
+        return x[0::2]+[x[-1]]
+    else:
+        return x[0::2]
+
 ScalingData ={}
 ScalingStd ={}
 for version in versions:
@@ -74,29 +84,36 @@ for queries in query_rates:
         serial_ax[plot_count].plot(threads,ScalingData[(version,queries)], next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #serial_ax[plot_count].errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #serial_ax[plot_count].legend(loc=2)
-        serial_ax[plot_count].legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2, prop=fontP)
+        serial_ax[plot_count].legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
         serial_ax[plot_count].set_xlabel("Threads")
         serial_ax[plot_count].set_ylabel("Throughput (Mops/sec)")
         #serial_ax[plot_count].set_ylim(0,70)
     
     plot_count +=1
+plt.tight_layout()
 name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_skew_10_times_final.pdf"
 #plt.savefig(name)
 plt.show()
 
 #########same but separate plots
-FIG_SIZE = [4,4]
+FIG_SIZE = [4,3.5]
 for queries in query_rates:
     plt.figure(figsize = FIG_SIZE)
     linecycler = cycle(lines)
     maerkercycler = cycle(markers)
+    plot_list = []
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        plt.plot(threads,ScalingData[(version,queries)], next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
+        pt = plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name, marker = next(markercycler), markersize=4 )
+	plot_list.append(pt[0])
+        #plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #plt.errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #plt.legend(loc=2)
     #plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2, prop=fontP)
-    plt.legend(loc='upper left')
+    plt.legend(loc='lower right')
+    #l1 = plt.legend([plot_list[0]],[fancy_names[0]],loc='lower right')
+    #l2 = plt.legend([plot_list[1]],[fancy_names[1]],loc='upper left')
+    #plt.gca().add_artist(l1)
     plt.xlabel("Threads")
     plt.ylabel("Throughput (Mops/sec)")
     ticks = range(10,80,10)
@@ -111,7 +128,7 @@ for queries in query_rates:
 
 
 
-FIG_SIZE = (4,4)
+FIG_SIZE = (4,3.5)
 skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
 skew_rates = [float(x) for x in skew_rates_raw_list.split()]
 threads="72"
@@ -134,6 +151,7 @@ for query in query_rates:
     plt.xlabel("Skew parameter")
     plt.ylabel("Throughput (Mops/sec)")
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"skew_"+str(query)+"_queries_final_no_squash.pdf"
+    plt.tight_layout()
     #plt.savefig(name,bbox_extra_artists=(lgd,), bbox_inches = "tight")
     plt.savefig(name)
     plt.show()

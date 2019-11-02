@@ -9,7 +9,7 @@ from plotters import plot_bars
 #fontP.set_size('large')
 import matplotlib
 
-fontsize =13 
+fontsize =15
 matplotlib.rcParams.update({'font.size': fontsize})
 
 
@@ -74,7 +74,7 @@ for version in versions:
 
 c = 0
 matplotlib.rcParams.update({'font.size': 16})
-FIG_SIZE = [5,6]
+FIG_SIZE = [5,4.5]
 for query in query_rates:
 	fig , ax = plt.subplots(1,1,figsize = FIG_SIZE)
 	kernels = []
@@ -127,7 +127,7 @@ plt.savefig(name)
 plt.show()
 
 #########same but separate plots
-matplotlib.rcParams.update({'font.size': fontsize})
+matplotlib.rcParams.update({'font.size': 18})
 FIG_SIZE = [8,6]
 c=0
 for queries in query_rates:
@@ -136,7 +136,10 @@ for queries in query_rates:
     maerkercycler = cycle(markers)
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
+        if(c==0):
+            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-"+str(queries)+"%", marker = next(markercycler), markersize=4 )
+        else:
+            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #plt.errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #plt.legend(loc=2)
     #plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
@@ -146,6 +149,7 @@ for queries in query_rates:
     plt.ylim(0,2500)
     c += 1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_queries_"+str(queries)+"_skew_10_times_final.pdf"
+    plt.tight_layout()
     plt.savefig(name)
     plt.show()
 
@@ -160,7 +164,7 @@ for version in versions:
 
 
 
-matplotlib.rcParams.update({'font.size': 17})
+matplotlib.rcParams.update({'font.size': 20})
 FIG_SIZE = [6,6]
 plt.figure(figsize = FIG_SIZE)
 for version in versions:
@@ -178,8 +182,8 @@ plt.savefig(name)
 plt.show()
 
 
-matplotlib.rcParams.update({'font.size': 15})
-FIG_SIZE = (7,5)
+matplotlib.rcParams.update({'font.size': 16})
+FIG_SIZE = (7,4)
 skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
 skew_rates = [float(x) for x in skew_rates_raw_list.split()]
 threads="72"
@@ -193,14 +197,23 @@ for version in versions:
 
 c = 0
 for query in query_rates:
+    plot_handles=[]
     linecycler = cycle(lines)
     plt.figure(figsize=FIG_SIZE)
     for version in versions:
 	name = fancy_names[versions.index(version)]
         #plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name + " - 0."+ str(query)+ "% queries", marker = next(markercycler), markersize = 4)
-        plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name, marker = next(markercycler), markersize = 4)
+        pt = plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name, marker = next(markercycler), markersize = 4)
+	plot_handles.append(pt)
     if (c==0):
-        plt.legend(loc = 'upper left')
+	print plot_handles
+        ax = fig.axes
+        l1 = plt.legend([plot_handles[0][0],plot_handles[1][0]],[fancy_names[0],fancy_names[1]], loc= 'right')
+        l2 = plt.legend([plot_handles[2][0],plot_handles[3][0]],[fancy_names[2],fancy_names[3]], loc= 'upper left')
+        #l2 = plt.legend(plot_handles[2:],fancy_names[2:], loc= 'upper left')
+        #plt.legend(loc = 'upper left')
+        #plt.add_artist(leg1)
+        plt.gca().add_artist(l1)
     plt.xlabel("Skew parameter")
     plt.ylabel("Throuhput (Mops/sec)")
     plt.tight_layout()
