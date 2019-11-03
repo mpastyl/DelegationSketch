@@ -14,12 +14,12 @@ matplotlib.rcParams.update({'font.size': fontsize})
 markers = ['+','.','o','^']
 markercycler = cycle(markers)
 
-suffix="uniform"
+suffix="zipf"
 
 #versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 #versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 versions = ["local_copies", "shared", "remote_inserts","shared_small"]
-fancy_names = ["Thread-local", "Single Sketch", "Delegation Sketch", "Reference"]
+fancy_names = ["Thread-local", "Single-Shared", "Delegation Sketch", "Reference"]
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
 #thread_list=[10]
