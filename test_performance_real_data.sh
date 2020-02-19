@@ -30,7 +30,7 @@ do
 	for rep in `seq 1 10`
 	do
             if [ "$version" = "cm_shared" ] || [ "$version" = "cm_shared_filtered" ]; then
-                ./bin/$version.out $universe_size $stream_size $(($buckets*$rows)) $rows 1 1.5 0 1 $threads $queries 1 /home/chasty/CAIDA_2018_source_ports | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries_real_data_CAIDA_2018_source_ports_10_times_final.log
+                ./bin/$version.out $universe_size $stream_size $(($buckets*$threads)) $rows 1 1.5 0 1 $threads $queries 1 /home/chasty/CAIDA_2018_source_ports | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries_real_data_CAIDA_2018_source_ports_10_times_final.log
             elif [ "$version" = "cm_delegation_filters" ] || [ "$version" = "cm_delegation_filters_with_linked_list" ]; then
                 new_columns=$((($buckets*$rows*4 - $threads*64)/($rows*4))) 
                 ./bin/$version.out $universe_size $stream_size $new_columns $rows 1 1.5 0 1 $threads $queries 1 /home/chasty/CAIDA_2018_source_ports | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries_real_data_CAIDA_2018_source_ports_10_times_final.log
@@ -54,7 +54,7 @@ do
 	for rep in `seq 1 10`
 	do
             if [ "$version" = "cm_shared" ] || [ "$version" = "cm_shared_filtered" ]; then
-                ./bin/$version.out $universe_size $stream_size $(($buckets*$rows)) $rows 1 1.5 0 1 $threads $queries 1 /home/chasty/CAIDA_2018_source_ips | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries_real_data_CAIDA_2018_source_ips_10_times_final.log
+                ./bin/$version.out $universe_size $stream_size $(($buckets*$threads)) $rows 1 1.5 0 1 $threads $queries 1 /home/chasty/CAIDA_2018_source_ips | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries_real_data_CAIDA_2018_source_ips_10_times_final.log
             elif [ "$version" = "cm_delegation_filters" ] || [ "$version" = "cm_delegation_filters_with_linked_list" ]; then
                 new_columns=$((($buckets*$rows*4 - $threads*64)/($rows*4))) 
                 ./bin/$version.out $universe_size $stream_size $new_columns $rows 1 1.5 0 1 $threads $queries 1 /home/chasty/CAIDA_2018_source_ips | grep -oP 'Total processing throughput [+-]?[0-9]+([.][0-9]+)?+' -a --text >> logs/${version}_${queries}_queries_real_data_CAIDA_2018_source_ips_10_times_final.log
