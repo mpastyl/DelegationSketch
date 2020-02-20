@@ -20,6 +20,7 @@ suffix="zipf"
 #versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 versions = ["local_copies", "shared", "remote_inserts","shared_small"]
 fancy_names = ["Thread-local", "Single-Shared", "Delegation Sketch", "Reference"]
+
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
 #thread_list=[10]
@@ -114,7 +115,10 @@ c = 0
 maerkercycler = cycle(markers)
 for version in versions:
     ARE = [totalARE[(version,threads)] for threads in thread_list]
-    plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=4)
+    if version == "shared":
+        plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=8, dashes=[3,3], linewidth = 2.5, zorder=10)
+    else:
+        plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=8, linewidth=3)
     c = c +1
 plt.xlabel("Threads" )
 plt.ylabel("Average Relative Error")
