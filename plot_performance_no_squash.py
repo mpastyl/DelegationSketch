@@ -81,7 +81,7 @@ for queries in query_rates:
     maerkercycler = cycle(markers)
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        serial_ax[plot_count].plot(threads,ScalingData[(version,queries)], next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
+        serial_ax[plot_count].plot(threads,ScalingData[(version,queries)], next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=8, linewidth = 3)
         #serial_ax[plot_count].errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #serial_ax[plot_count].legend(loc=2)
         serial_ax[plot_count].legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
@@ -104,7 +104,7 @@ for queries in query_rates:
     plot_list = []
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        pt = plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name, marker = next(markercycler), markersize=4 )
+        pt = plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name, marker = next(markercycler), markersize=6, linewidth =2 )
 	plot_list.append(pt[0])
         #plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+" - 0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
         #plt.errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
@@ -145,7 +145,7 @@ for query in query_rates:
     plt.figure(figsize=FIG_SIZE)
     for version in versions:
 	name = fancy_names[versions.index(version)]
-        plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name + " - 0."+ str(query)+ "% queries", marker = next(markercycler), markersize = 4)
+        plt.plot(skew_rates,SkewnesData[(version,query)], next(linecycler), label = name + " - 0."+ str(query)+ "% queries", marker = next(markercycler), markersize = 6, linewidth = 2)
     #lgd = plt.legend(loc = 'upper left')
     #lgd = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
     plt.xlabel("Skew parameter")
