@@ -137,9 +137,9 @@ for queries in query_rates:
     for version in versions:
 	name = fancy_names[versions.index(version)]
 	if (c==0): 
-            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-"+str(queries)+"%", marker = next(markercycler), markersize=4 )
+            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-"+str(queries)+"%", marker = next(markercycler), markersize=8, linewidth = 3)
 	else:
-            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-0."+str(queries)+"%", marker = next(markercycler), markersize=4 )
+            plt.plot(subsample(threads),subsample(ScalingData[(version,queries)]), next(linecycler), label = name+"-0."+str(queries)+"%", marker = next(markercycler), markersize=8, linewidth = 3)
         #plt.errorbar(threads,ScalingData[(version,queries)], ScalingStd[(version,queries)], label = version+" - 0."+str(queries)+"%",  linestyle = next(linecycler))
         #plt.legend(loc=2)
     #plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=2)
@@ -170,7 +170,7 @@ plt.figure(figsize = FIG_SIZE)
 for version in versions:
     #plt.plot(query_rates,QueriesData[version],  next(linecycler), label = version)
     name = fancy_names[versions.index(version)]
-    plt.plot([float(x)/10 for x in query_rates], QueriesData[version],  next(linecycler), label = name, marker = next(markercycler), markersize = 4)
+    plt.plot([float(x)/10 for x in query_rates], QueriesData[version],  next(linecycler), label = name, marker = next(markercycler), markersize = 8, linewidth = 3)
 lgd=plt.legend(loc = 'upper right')
 #lgd = plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", mode="expand", borderaxespad=0, ncol=3, prop=fontP)
 plt.xlabel("Query rate (%)")
