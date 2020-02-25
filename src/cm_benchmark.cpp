@@ -300,7 +300,9 @@ void threadWork(threadDataStruct *localThreadData)
             if (shouldQuery(localThreadData) < QUERRY_RATE)
             {
                 numQueries++;
+                #if DELEGATION_FILTERS
                 serveDelegatedQueries(localThreadData);
+                #endif
                 double approximate_freq = querry(localThreadData, key);
                 localThreadData->returnData += approximate_freq;
             }
