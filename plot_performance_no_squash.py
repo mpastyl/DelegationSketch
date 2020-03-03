@@ -29,7 +29,7 @@ query_rates = [0,1,2,3]
 versions = ["","_no_squash"] 
 fancy_names = ["Single-shared", "Thread-local", "Augmented Sketch", "Delegation Filters"] 
 #fancy_names = ["Delegation Sketch w query optimization","Delegation Sketch w/o query optimization"]
-fancy_names = ["with query optimization","w/o query optimization"]
+fancy_names = ["with query\noptimization","w/o query\noptimization"]
 
 
 REPS = 10
@@ -96,7 +96,7 @@ name = "/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"
 plt.show()
 
 #########same but separate plots
-FIG_SIZE = [4,3.5]
+FIG_SIZE = [3.5,3]
 for queries in query_rates:
     plt.figure(figsize = FIG_SIZE)
     linecycler = cycle(lines)
@@ -128,7 +128,7 @@ for queries in query_rates:
 
 
 
-FIG_SIZE = (4,3.5)
+FIG_SIZE = (3.5,3)
 skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
 skew_rates = [float(x) for x in skew_rates_raw_list.split()]
 threads="72"

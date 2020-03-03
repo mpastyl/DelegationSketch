@@ -11,7 +11,7 @@ markercycler = cycle(markers)
 #fontP = FontProperties()
 #fontP.set_size('large')
 import matplotlib
-matplotlib.rcParams.update({'font.size': 11})
+matplotlib.rcParams.update({'font.size': 12})
 
 suffix="ithaca_final"
 
@@ -102,7 +102,7 @@ sortAll(totalHist[(versions[0],thread_list[0])], totalAnswers)
 totalHist[(versions[0],thread_list[0])] =  sorted(totalHist[(versions[0],thread_list[0])], reverse = True)
 #plt.plot(totalHist[(versions[0],thread_list[0])], label = "True Frequency")
 c=0
-FIG_SIZE = (6,5)
+FIG_SIZE = (6.2,5.2)
 plt.figure(figsize=FIG_SIZE)
 for version in versions:
     #plt.plot(totalAnswers[(version,thread_list[0])], next(linecycler), label = fancy_names[c])

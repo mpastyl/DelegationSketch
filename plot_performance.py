@@ -65,7 +65,7 @@ RealData = {}
 RealDataStd = {}
 query_rates = [0,1,2,3]
 datasetNames = ["CAIDA_2018_source_ips","CAIDA_2018_source_ports"]
-fancy_data_set_names  = ["CAIDA (low skew)", "CAIDA (high skew)"]
+fancy_data_set_names  = ["CAIDA\n(low skew)", "CAIDA\n(high skew)"]
 for version in versions:
 	for query in query_rates:
 	    for dataName in datasetNames:
@@ -73,8 +73,8 @@ for version in versions:
 	    	RealData[(version, query,dataName)], RealDataStd[(version, query,dataName)] = average_and_std(raw_data,REPS)
 
 c = 0
-matplotlib.rcParams.update({'font.size': 16})
-FIG_SIZE = [5,4.5]
+matplotlib.rcParams.update({'font.size': 17})
+FIG_SIZE = [5,5.8]
 for query in query_rates:
 	fig , ax = plt.subplots(1,1,figsize = FIG_SIZE)
 	kernels = []
@@ -127,7 +127,7 @@ plt.savefig(name)
 plt.show()
 
 #########same but separate plots
-matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rcParams.update({'font.size': 20})
 FIG_SIZE = [8,6]
 c=0
 for queries in query_rates:
@@ -147,6 +147,9 @@ for queries in query_rates:
     plt.xlabel("Threads")
     plt.ylabel("Throughput (Mops/sec)")
     plt.ylim(0,2500)
+    xticks = [10,20,30,40,50,60,70]
+    xtick_labels = [str(x) for x in xticks]
+    plt.xticks(xticks,xtick_labels)
     c += 1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_queries_"+str(queries)+"_skew_10_times_final.pdf"
     plt.tight_layout()
@@ -183,7 +186,7 @@ plt.show()
 
 
 matplotlib.rcParams.update({'font.size': 16})
-FIG_SIZE = (7,4)
+FIG_SIZE = (7,5)
 skew_rates_raw_list = "0 0.25 0.5 0.75 1 1.25 1.5 1.75 2 2.25 2.5 2.75 3 3.25 3.5 3.75 4"
 skew_rates = [float(x) for x in skew_rates_raw_list.split()]
 threads="72"
@@ -214,8 +217,8 @@ for query in query_rates:
         #plt.legend(loc = 'upper left')
         #plt.add_artist(leg1)
         plt.gca().add_artist(l1)
-    plt.xlabel("Skew parameter")
-    plt.ylabel("Throuhput (Mops/sec)")
+    plt.xlabel("Skew parameter",fontsize=18)
+    plt.ylabel("Throuhput (Mops/sec)",fontsize=18)
     plt.tight_layout()
     c +=1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"skew_"+str(query)+"_queries_final.pdf"

@@ -20,7 +20,7 @@ def plot_bars(ax,groups,labels,title,legend,to_compare,stdz,show_legend=False, o
         #ax.set_xlabel(title)
         #ax.set_xticks(ind + 2*width)
         ax.set_xticks(ind+1*width)
-        ax.set_xticklabels(labels,rotation='0')
+        ax.set_xticklabels(labels,rotation='0', fontsize=22)
         rects_set=[]
         lgd=[]
         c=0
