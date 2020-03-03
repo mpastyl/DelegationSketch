@@ -16,10 +16,16 @@ markercycler = cycle(markers)
 
 suffix="zipf"
 
+
+default_colours = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+rearranged_colours = [default_colours[7], default_colours[1], default_colours[0], default_colours[3]]
+
+
+
 #versions = ["shared", "local_copies", "hybrid", "remote_inserts", "remote_inserts_filtered", "shared_filtered", "local_copies_filtered", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
 #versions = ["shared", "local_copies", "augmented_sketch", "delegation_filters", "delegation_filters_with_linked_list"]
-versions = ["local_copies", "shared", "remote_inserts","shared_small"]
-fancy_names = ["Thread-local", "Single-Shared", "Delegation Sketch", "Reference"]
+versions = ["shared_small","local_copies", "shared", "remote_inserts"]
+fancy_names = ["Reference", "Thread-local", "Single-Shared", "Delegation Sketch"]
 
 #filename = "count_min_results.txt"
 #thread_list=range(1,29)
@@ -116,9 +122,9 @@ maerkercycler = cycle(markers)
 for version in versions:
     ARE = [totalARE[(version,threads)] for threads in thread_list]
     if version == "shared":
-        plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=8, dashes=[3,3], linewidth = 2.5, zorder=10)
+        plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=8, dashes=[3,3], linewidth = 1.8, zorder=10, color = rearranged_colours[c])
     else:
-        plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=8, linewidth=3)
+        plt.plot(thread_list, ARE, label = fancy_names[c],  marker = next(markercycler), markersize=8, linewidth=3, color = rearranged_colours[c])
     c = c +1
 plt.xlabel("Threads" )
 plt.ylabel("Average Relative Error")

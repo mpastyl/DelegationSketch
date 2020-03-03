@@ -127,7 +127,7 @@ plt.savefig(name)
 plt.show()
 
 #########same but separate plots
-matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rcParams.update({'font.size': 20})
 FIG_SIZE = [8,6]
 c=0
 for queries in query_rates:
@@ -146,7 +146,7 @@ for queries in query_rates:
     plt.legend(loc="upper left")
     plt.xlabel("Threads")
     plt.ylabel("Throughput (Mops/sec)")
-    plt.ylim(0,1900)
+    plt.ylim(0,2200)
     c += 1
     name="/home/chasty/sketches/rusu-sketches-size-join-estimation/"+name_prefix+"scaling_at_1_5_queries_"+str(queries)+"_skew_10_times_final.pdf"
     plt.tight_layout()
