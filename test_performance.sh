@@ -1,4 +1,4 @@
-RUN_ON_ITHACA=1
+RUN_ON_ITHACA=2
 thread_list=`seq 4 4 72`
 
 buckets=512 #use 800 for odysseus, 512 for ithaca
