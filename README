@@ -7,11 +7,12 @@ Preliminary Instructions
 ----------------------------------
 To build:
 
+```
 mkdir bin
 cd src
 make ITHACA=2
-
-It will generate a differnt binary in bin for every version.
+```
+It will generate a different binary in bin for every version.
 
 test_performance.sh is a script that builds and runs Delegation Sketch and the other baselines, against different parameters.
 
@@ -19,14 +20,14 @@ Set ITHACA=2 for a straightforward thread-to-cpu pinning (i.e. thread 0 is pinne
 
 Main source files
 ------------------------------
-src/cm_benchmark.cpp contains the benchmark entry point, input and data structure creation. as well as the main processing loop. 
+src/cm_benchmark.cpp contains the benchmark entry point, input and data structure creation, as well as the main processing loop. 
 Also contains the main routines of Delegation Sketch.
 
 src/sketches.cpp contains insert/query implementations of the underlying sketch.
 
 inlude/filter.h contains operation regarding filters, used by Delegation Sketch and Augmented Sketch.
 
-Ackownledgements
+Acknowledgments
 ------------------------------
-Part of the project was based on sketch, hash function and input distribution creation from Florin Rusu https://faculty.ucmerced.edu/frusu/Projects/Sketches/sketches.html
+Part of the project was based on sketch, hash function and input distribution creation from Florin Rusu https://faculty.ucmerced.edu/frusu/Projects/Sketches/sketches.html  Some documentation on those parts can be found there.
 
