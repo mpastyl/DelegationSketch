@@ -14,7 +14,7 @@ make ITHACA=2
 ```
 It will generate a different binary in bin for every version.
 
-test_performance.sh is a script that builds and runs Delegation Sketch and the other baselines, against different parameters.
+test_performance.sh is a script that builds and runs Delegation Sketch and the other baselines, against different parameters. Can be useful as a usage example.
 
 Set ITHACA=2 for a straightforward thread-to-cpu pinning (i.e. thread 0 is pinned to CPU0). You might want to search for "ITHACA" in src/cm_benchark.cpp and change the mapping there for a more NUMA aware mapping.
 
@@ -25,7 +25,7 @@ Also contains the main routines of Delegation Sketch.
 
 src/sketches.cpp contains insert/query implementations of the underlying sketch.
 
-inlude/filter.h contains operation regarding filters, used by Delegation Sketch and Augmented Sketch.
+inlude/filter.h contains operations regarding filters, used by Delegation Sketch and Augmented Sketch.
 
 Acknowledgments
 ------------------------------

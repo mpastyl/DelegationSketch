@@ -610,52 +610,55 @@ int main(int argc, char **argv)
         
         printf("Total processing throughput %f Mtouples per sec\n", (float)totalElementsProcessed / getTimeMs() / 1000);
         
-        // FILE *fp = fopen("logs/count_min_results.txt", "w");
-        // for (i = 0; i < dom_size; i++)
-        // {
-        //     #if HYBRID
-        //     double approximate_freq = globalSketch->Query_Sketch(i);
-        //     approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-        //     #elif REMOTE_INSERTS || USE_MPSC 
-        //     double approximate_freq = cmArray[findOwner(i)]->Query_Sketch(i);
-        //     #elif LOCAL_COPIES
-        //     double approximate_freq = 0;
-        //     for (int j=0; j<numberOfThreads; j++){
-        //         approximate_freq += cmArray[j]->Query_Sketch(i);
-        //     }
-        //     #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
-        //     double approximate_freq = 0;
-        //     for (int j=0; j<numberOfThreads; j++){
-        //         unsigned int countInFilter = queryFilter(i, &(threadData[j].Filter));
-        //         if (countInFilter){
-        //             approximate_freq += countInFilter;
-        //         }
-        //         else{
-        //             approximate_freq += cmArray[j]->Query_Sketch(i);
-        //         }
-        //     }
-        //     #elif SHARED_SKETCH
-        //     double approximate_freq = globalSketch->Query_Sketch(i);
-        //     #elif DELEGATION_FILTERS
-        //     double approximate_freq = 0;
-        //     int owner = findOwner(i);
-        //     unsigned int countInFilter = queryFilter(i, &(threadData[owner].Filter));
-        //     if (countInFilter){
-        //         approximate_freq += countInFilter;
-        //     }
-        //     else{
-        //         approximate_freq += cmArray[owner]->Query_Sketch(i);
-        //     }
-        //     for (int j =0; j < numberOfThreads; j++){
-        //         approximate_freq+= queryFilter(i, &(filterMatrix[j * numberOfThreads + owner]));
-        //     }
-        //     #endif
-        //     #if USE_FILTER
-        //         approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
-        //     #endif
-        //     fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
-        // }
-        // fclose(fp);
+         //NOTE: PUT ME BACK FOR ACCURACY TESTS
+         /*
+         FILE *fp = fopen("logs/count_min_results.txt", "w");
+         for (i = 0; i < dom_size; i++)
+         {
+             #if HYBRID
+             double approximate_freq = globalSketch->Query_Sketch(i);
+             approximate_freq += (HYBRID-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+             #elif REMOTE_INSERTS || USE_MPSC 
+             double approximate_freq = cmArray[findOwner(i)]->Query_Sketch(i);
+             #elif LOCAL_COPIES
+             double approximate_freq = 0;
+             for (int j=0; j<numberOfThreads; j++){
+                 approximate_freq += cmArray[j]->Query_Sketch(i);
+             }
+             #elif AUGMENTED_SKETCH   // WARNING: Queries are not thread safe right now
+             double approximate_freq = 0;
+             for (int j=0; j<numberOfThreads; j++){
+                 unsigned int countInFilter = queryFilter(i, &(threadData[j].Filter));
+                 if (countInFilter){
+                     approximate_freq += countInFilter;
+                 }
+                 else{
+                     approximate_freq += cmArray[j]->Query_Sketch(i);
+                 }
+             }
+             #elif SHARED_SKETCH
+             double approximate_freq = globalSketch->Query_Sketch(i);
+             #elif DELEGATION_FILTERS
+             double approximate_freq = 0;
+             int owner = findOwner(i);
+             unsigned int countInFilter = queryFilter(i, &(threadData[owner].Filter));
+             if (countInFilter){
+                 approximate_freq += countInFilter;
+             }
+             else{
+                 approximate_freq += cmArray[owner]->Query_Sketch(i);
+             }
+             for (int j =0; j < numberOfThreads; j++){
+                 approximate_freq+= queryFilter(i, &(filterMatrix[j * numberOfThreads + owner]));
+             }
+             #endif
+             #if USE_FILTER
+                 approximate_freq += (MAX_FILTER_SLACK-1)*numberOfThreads; //The amount of slack that can be hiden in the local copies
+             #endif
+             fprintf(fp, "%d %u %f\n", i, hist1[i], approximate_freq);
+         }
+         fclose(fp);
+         */
         //clean-up everything
 
         for (i = 0; i < rows_no; i++)
