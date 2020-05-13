@@ -27,6 +27,10 @@ src/sketches.cpp contains insert/query implementations of the underlying sketch.
 
 inlude/filter.h contains operations regarding filters, used by Delegation Sketch and Augmented Sketch.
 
+Notes
+--------------------------
+A refactoring is on its way...
+
 Acknowledgments
 ------------------------------
 Part of the project was based on sketch, hash function and input distribution creation from Florin Rusu https://faculty.ucmerced.edu/frusu/Projects/Sketches/sketches.html  Some documentation on those parts can be found there.
