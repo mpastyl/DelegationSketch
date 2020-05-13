@@ -2,6 +2,7 @@ Delegation Sketch
 ------------------------------------
 A parallel design for sketches, that supports concurrent insertions and queries at high rates. Uses Augmented Sketch as the underlying sketch.
 
+Publication: "Delegation sketch: a parallel design with support for fast and accurate concurrent operations", Charalampos Stylianopoulos, Ivan Walulya, Magnus Almgren, Olad Landsiedel, Marina Papatriantafilou, EuroSys'20, Heraklion, Greece, [pdf](https://dl.acm.org/doi/abs/10.1145/3342195.3387542)
 
 Preliminary Instructions
 ----------------------------------
