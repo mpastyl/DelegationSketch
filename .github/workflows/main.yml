@@ -1,0 +1,6 @@
+jobs:
+  hello-world:
+    runs-on: runners-arm64-alpha
+    steps:
+      - run: |
+          echo "Hello world"
